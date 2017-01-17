@@ -3,8 +3,8 @@
 namespace Keboola\GoogleDriveWriter\Tests;
 
 use Keboola\Google\ClientBundle\Google\RestApi;
-use Keboola\GoogleDriveExtractor\GoogleDrive\Client;
-use Keboola\GoogleDriveExtractor\Test\BaseTest;
+use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleDriveWriter\Test\BaseTest;
 
 /**
  * Created by PhpStorm.
@@ -25,6 +25,11 @@ class ClientTest extends BaseTest
         $this->client = new Client($api);
     }
 
+    public function testCreateFile()
+    {
+
+    }
+
     public function testGetFile()
     {
         $file = $this->client->getFile($this->testFile['spreadsheetId']);
@@ -34,7 +39,22 @@ class ClientTest extends BaseTest
         $this->assertEquals($this->testFile['spreadsheetId'], $file['id']);
     }
 
-    public function testGetSpreadsheet()
+    public function testUpdateFile()
+    {
+
+    }
+
+    public function testDeleteFile()
+    {
+
+    }
+
+    public function testCreateSheet()
+    {
+
+    }
+
+    public function testGetSheet()
     {
         $spreadsheet = $this->client->getSpreadsheet($this->testFile['spreadsheetId']);
 
@@ -43,7 +63,7 @@ class ClientTest extends BaseTest
         $this->assertArrayHasKey('sheets', $spreadsheet);
     }
 
-    public function testGetSpreadsheetValues()
+    public function testGetSheetValues()
     {
         $spreadsheetId = $this->testFile['spreadsheetId'];
         $sheetTitle = $this->testFile['sheets'][0]['properties']['title'];
@@ -59,5 +79,15 @@ class ClientTest extends BaseTest
         $this->assertEquals('Age', $header[3]);
         $this->assertEquals('Survived', $header[4]);
         $this->assertEquals('Freq', $header[5]);
+    }
+
+    public function testUpdateSheetValues()
+    {
+
+    }
+
+    public function testAppendSheetValues()
+    {
+
     }
 }

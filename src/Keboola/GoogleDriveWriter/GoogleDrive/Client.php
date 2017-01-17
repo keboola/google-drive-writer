@@ -93,6 +93,42 @@ class Client
         return json_decode($response->getBody()->getContents(), true);
     }
 
+    public function updateFile($sheet)
+    {
+        // update metadata
+        $body = [
+            'name' => $sheet['fileTitle'],
+            'mimeType' => 'application/vnd.google-apps.spreadsheet'
+        ];
+
+        $response = $this->api->request(
+            sprintf('%s/%s', self::DRIVE_FILES, $sheet['fileId']),
+            'PATCH',
+            [
+                'Content-Type' => 'application/json',
+            ],
+            [
+                'json' => $body
+            ]
+        );
+
+        $responseJson = json_decode($response->getBody(), true);
+
+        $response = $this->api->request(
+            sprintf('%s/%s?uploadType=media', self::DRIVE_UPLOAD, $responseJson['id']),
+            'PATCH',
+            [
+                'Content-Type' => 'text/csv',
+                'Content-Length' => filesize($sheet['pathname'])
+            ],
+            [
+                'body' => \GuzzleHttp\Psr7\stream_for(fopen($sheet['pathname'], 'r'))
+            ]
+        );
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
     /**
      * @param $id
      * @return \GuzzleHttp\Psr7\Response
@@ -145,6 +181,64 @@ class Client
             'GET',
             [
                 'Accept' => 'application/json',
+            ]
+        );
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    public function createSpreadsheet($sheet)
+    {
+        $body = [
+            'properties' => [
+                'title' => $sheet['fileTitle']
+            ],
+            'sheets' => [
+                [
+                    'properties' => [
+                        'title' => $sheet['sheetTitle']
+                    ],
+                ]
+            ]
+        ];
+
+        if ($sheet['fileId'] !== null) {
+            $body['spreadsheetId'] = $sheet['fileId'];
+        }
+
+        $response = $this->api->request(
+            self::SPREADSHEETS,
+            'POST',
+            [
+                'Accept' => 'application/json',
+            ],
+            [
+                'json' => $body
+            ]
+        );
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    public function updateSpreadsheetValues($spreadsheetId, $range, $values)
+    {
+        $response = $this->api->request(
+            sprintf(
+                '%s%s/values/%s',
+                self::SPREADSHEETS,
+                $spreadsheetId,
+                $range
+            ),
+            'PUT',
+            [
+                'Accept' => 'application/json',
+            ],
+            [
+                'json' => [
+                    'range' => $range,
+                    'majorDimension' => 'ROWS',
+                    'values' => $values
+                ]
             ]
         );
 

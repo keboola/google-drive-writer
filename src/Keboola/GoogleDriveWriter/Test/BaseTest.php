@@ -8,9 +8,7 @@
 
 namespace Keboola\GoogleDriveWriter\Test;
 
-use Keboola\Google\ClientBundle\Google\RestApi;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
-use Symfony\Component\Yaml\Yaml;
 
 class BaseTest extends \PHPUnit_Framework_TestCase
 {
@@ -74,10 +72,5 @@ class BaseTest extends \PHPUnit_Framework_TestCase
             $this->googleDriveApi->deleteFile($this->testFile['id']);
         } catch (\Exception $e) {
         }
-    }
-
-    protected function getOutputFileName($fileId, $sheetId)
-    {
-        return $fileId . '_' . $sheetId . '.csv';
     }
 }

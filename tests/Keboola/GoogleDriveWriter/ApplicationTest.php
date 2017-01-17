@@ -8,8 +8,8 @@
 
 namespace Keboola\GoogleDriveWriter\Tests;
 
-use Keboola\GoogleDriveExtractor\Application;
-use Keboola\GoogleDriveExtractor\Test\BaseTest;
+use Keboola\GoogleDriveWriter\Application;
+use Keboola\GoogleDriveWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;

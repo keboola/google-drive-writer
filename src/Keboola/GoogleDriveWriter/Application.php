@@ -14,8 +14,7 @@ use Keboola\Google\ClientBundle\Google\RestApi;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
-use Keboola\GoogleDriveWriter\Extractor\Extractor;
-use Keboola\GoogleDriveWriter\Extractor\Output;
+use Keboola\GoogleDriveWriter\Writer\Writer;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Monolog\Handler\NullHandler;
 use Pimple\Container;
@@ -30,7 +29,6 @@ class Application
     {
         $container = new Container();
         $container['action'] = isset($config['action'])?$config['action']:'run';
-        $container['parameters'] = $this->validateParamteters($config['parameters']);
         $container['logger'] = function ($c) {
             $logger = new Logger(APP_NAME);
             if ($c['action'] !== 'run') {
@@ -38,6 +36,7 @@ class Application
             }
             return $logger;
         };
+        $container['parameters'] = $this->validateParameters($config['parameters']);
         if (empty($config['authorization'])) {
             throw new UserException('Missing authorization data');
         }
@@ -53,13 +52,9 @@ class Application
         $container['google_drive_client'] = function ($c) {
             return new Client($c['google_client']);
         };
-        $container['output'] = function ($c) {
-            return new Output($c['parameters']['data_dir'], $c['parameters']['outputBucket']);
-        };
-        $container['extractor'] = function ($c) {
-            return new Extractor(
+        $container['writer'] = function ($c) {
+            return new Writer(
                 $c['google_drive_client'],
-                $c['output'],
                 $c['logger']
             );
         };
@@ -99,19 +94,19 @@ class Application
         }
     }
 
-    private function runAction()
+    protected function runAction()
     {
-        /** @var Extractor $extractor */
-        $extractor = $this->container['extractor'];
-        $extracted = $extractor->run($this->container['parameters']['sheets']);
+        /** @var Writer $writer */
+        $writer = $this->container['writer'];
+        $results = $writer->process($this->container['parameters']['sheets']);
 
         return [
             'status' => 'ok',
-            'extracted' => $extracted
+            'results' => $results
         ];
     }
 
-    private function validateParamteters($parameters)
+    private function validateParameters($parameters)
     {
         try {
             $processor = new Processor();

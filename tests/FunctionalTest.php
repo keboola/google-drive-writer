@@ -7,8 +7,7 @@
  */
 namespace Keboola\GoogleDriveWriter\Tests;
 
-use Keboola\Csv\CsvFile;
-use Keboola\GoogleDriveExtractor\Test\BaseTest;
+use Keboola\GoogleDriveWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
@@ -33,7 +32,7 @@ class FunctionalTest extends BaseTest
         );
     }
 
-    public function testRunEmptyFile()
+    public function testRunEmptyTable()
     {
         $emptyFilePath = ROOT_PATH . '/tests/data/in/empty.csv';
         touch($emptyFilePath);
@@ -54,29 +53,36 @@ class FunctionalTest extends BaseTest
         unlink($emptyFilePath);
     }
 
-    public function testSanitizeHeader()
+    /**
+     * Create each time a new file - append date to filename
+     */
+    public function testCreateFile()
     {
-        $filePath = ROOT_PATH . '/tests/data/in/sanitize.csv';
-        touch($filePath);
-        file_put_contents($filePath, '"Weird-[]./;-_*Chars", "Second column", "# poops per day"');
 
-        $this->testFile = $this->prepareTestFile($filePath, 'sanitize');
-        $this->config = $this->makeConfig($this->testFile);
+    }
 
-        $process = $this->runProcess();
-        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+    /**
+     * Create or replace a file
+     */
+    public function testUpdateFile()
+    {
 
-        $fileId = $this->config['parameters']['sheets'][0]['fileId'];
-        $sheetId = $this->config['parameters']['sheets'][0]['sheetId'];
+    }
 
-        $this->assertEquals(
-            '"Weird_Chars","Second_column","count_poops_per_day"' . PHP_EOL,
-            file_get_contents(
-                $this->dataPath . '/out/tables/' . $this->getOutputFileName($fileId, $sheetId)
-            )
-        );
+    /**
+     * Create or update a sheet
+     */
+    public function testUpdateSheet()
+    {
 
-        unlink($filePath);
+    }
+
+    /**
+     * Append content to a sheet
+     */
+    public function testAppendSheet()
+    {
+
     }
 
     /**
