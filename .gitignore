@@ -4,6 +4,5 @@
 .idea/
 composer.phar
 tests.sh
-tokens.php
 /tests/data/out
 run.sh
