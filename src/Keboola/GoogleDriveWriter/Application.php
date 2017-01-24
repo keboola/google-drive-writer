@@ -14,7 +14,6 @@ use Keboola\Google\ClientBundle\Google\RestApi;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
-use Keboola\GoogleDriveWriter\Writer\Writer;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Monolog\Handler\NullHandler;
 use Pimple\Container;
@@ -52,9 +51,13 @@ class Application
         $container['google_drive_client'] = function ($c) {
             return new Client($c['google_client']);
         };
+        $container['input'] = function ($c) {
+            return new Input($c['parameters']['data_dir']);
+        };
         $container['writer'] = function ($c) {
             return new Writer(
                 $c['google_drive_client'],
+                $c['input'],
                 $c['logger']
             );
         };
@@ -98,11 +101,22 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $results = $writer->process($this->container['parameters']['sheets']);
+        $writer->process($this->container['parameters']['files']);
+
+        return [
+            'status' => 'ok'
+        ];
+    }
+
+    protected function createFileAction()
+    {
+        /** @var Writer $writer */
+        $writer = $this->container['writer'];
+        $res = $writer->createFile(array_shift($this->container['parameters']['files']));
 
         return [
             'status' => 'ok',
-            'results' => $results
+            'fileId' => $res['id']
         ];
     }
 

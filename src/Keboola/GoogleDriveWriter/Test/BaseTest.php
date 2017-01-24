@@ -9,23 +9,27 @@
 namespace Keboola\GoogleDriveWriter\Test;
 
 use Keboola\Csv\CsvFile;
+use Keboola\Google\ClientBundle\Google\RestApi;
+use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 
 class BaseTest extends \PHPUnit_Framework_TestCase
 {
-    protected $testFilePath = ROOT_PATH . '/tests/data/in/titanic.csv';
+    protected $dataPath = ROOT_PATH . '/tests/data';
 
-    protected $testFileName = 'titanic';
-
-    protected $config;
+    /** @var Client */
+    protected $client;
 
     public function setUp()
     {
-        $this->config = $this->makeConfig($this->testFilePath, $this->testFileName);
+        $api = new RestApi(getenv('CLIENT_ID'), getenv('CLIENT_SECRET'));
+        $api->setCredentials(getenv('ACCESS_TOKEN'), getenv('REFRESH_TOKEN'));
+        $api->setBackoffsCount(2); // Speeds up the tests
+        $this->client = new Client($api);
     }
 
-    protected function makeConfig($pathname, $title)
+    protected function prepareConfig()
     {
-        $config['parameters']['data_dir'] = ROOT_PATH . '/tests/data';
+        $config['parameters']['data_dir'] = $this->dataPath;
         $config['authorization']['oauth_api']['credentials'] = [
             'appKey' => getenv('CLIENT_ID'),
             '#appSecret' => getenv('CLIENT_SECRET'),
@@ -33,18 +37,6 @@ class BaseTest extends \PHPUnit_Framework_TestCase
                 'access_token' => getenv('ACCESS_TOKEN'),
                 'refresh_token' => getenv('REFRESH_TOKEN')
             ])
-        ];
-        $config['parameters']['sheets'][0] = [
-            'id' => 0,
-            'fileId' => '',
-            'fileTitle' => $title,
-            'sheetId' => '',
-            'sheetTitle' => '',
-            'folder' => '/',
-            'type' => 'file',
-            'action' => 'create',
-            'pathname' => $pathname,
-            'enabled' => true
         ];
 
         return $config;

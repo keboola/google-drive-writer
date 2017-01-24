@@ -8,34 +8,54 @@
 
 namespace Keboola\GoogleDriveWriter\Writer;
 
+use GuzzleHttp\Exception\ClientException;
 use Keboola\Csv\CsvFile;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleDriveWriter\Input;
 
 class Sheet
 {
+    /** @var Client */
     private $client;
 
-    public function __construct(Client $client)
+    /** @var Input */
+    private $input;
+
+    public function __construct(Client $client, Input $input)
     {
         $this->client = $client;
+        $this->input = $input;
     }
 
     public function update($sheet)
     {
-        $driveFile = null;
-        if ($sheet['fileId'] !== null) {
-            try {
-                $driveFile = $this->client->getSpreadsheet($sheet['fileId']);
-            } catch (\Exception $e) {
+        try {
+            $gdSpreadsheet = $this->client->getSpreadsheet($sheet['fileId']);
+        } catch (ClientException $e) {
+            if ($e->getResponse()->getStatusCode() !== 404) {
+                throw $e;
             }
+
+            // file doesn't exist
+            $gdFile = $this->client->createFile(
+                $this->input->getInputTablePath($sheet['tableId']),
+                $sheet['title'],
+                [
+                    'parents' => $sheet['parents'],
+                    'mimeType' => Client::MIME_TYPE_SPREADSHEET
+                ]
+            );
+
+            $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
         }
 
-        // file do not exist
-        if ($driveFile == null) {
-            // upload file
-            $this->client->createFile($sheet['pathname'], $sheet['title']);
-        }
+        $gdFile = $this->client->getFile($sheet['fileId'], ['id', 'name', 'parents']);
 
+        // sync metadata
+        $this->syncFileMetadata($sheet, $gdFile);
+        $this->syncSpreadsheetMetadata($sheet, $gdSpreadsheet);
+
+        // upload values
         $csvFile = new CsvFile($sheet['pathname']);
         $offset = 0;
         $limit = 1000;
@@ -59,18 +79,6 @@ class Sheet
         }
 
         return $responses;
-
-        // file exists, check if the sheet exists
-//        $sheetExists = false;
-//        foreach ($driveFile['sheets'] as $driveSheet) {
-//            if ($driveSheet['properties']['title'] == $sheet['sheetTitle']) {
-//                $sheetExists = true;
-//            }
-//        }
-//
-//        if ($sheetExists) {
-//
-//        }
     }
 
     public function append($sheet)
@@ -101,5 +109,38 @@ class Sheet
         $remainder = $columnNumber%26;
 
         return $prefix . $alphas[$remainder];
+    }
+
+    private function syncFileMetadata($sheet, $gdFile)
+    {
+        $parentsToAdd = [];
+        foreach ($sheet['parents'] as $parent) {
+            if (false === array_search($parent, $gdFile['parents'])) {
+                $parentsToAdd[] = $parent;
+            }
+        }
+        $body = [];
+        if ($sheet['title'] !== $gdFile['name']) {
+            $body['name'] = $sheet['title'];
+        }
+        $params = [];
+        if (!empty($parentsToAdd)) {
+            $params['addParents'] = $parentsToAdd;
+        }
+
+        if (!empty($body) || !empty($params)) {
+            $this->client->updateFileMetadata($gdFile['id'], $body, $params);
+        }
+    }
+
+    private function syncSpreadsheetMetadata($sheet, $gdSpreadsheet)
+    {
+        //@todo spreadsheet title, sheets, sheet titles
+
+        // rename sheet in spreadsheet
+        $this->client->updateSheet($gdSpreadsheet['spreadsheetId'], [
+            'sheetId' => $gdSpreadsheet['sheets'][0]['properties']['sheetId'],
+            'title' => 'sheet1'
+        ]);
     }
 }

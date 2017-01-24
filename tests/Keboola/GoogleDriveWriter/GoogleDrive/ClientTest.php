@@ -2,8 +2,7 @@
 
 namespace Keboola\GoogleDriveWriter\Tests;
 
-use Keboola\Google\ClientBundle\Google\RestApi;
-use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use GuzzleHttp\Exception\ClientException;
 use Keboola\GoogleDriveWriter\Test\BaseTest;
 
 /**
@@ -14,25 +13,33 @@ use Keboola\GoogleDriveWriter\Test\BaseTest;
  */
 class ClientTest extends BaseTest
 {
-    /** @var Client */
-    private $client;
-
-    public function setUp()
+    public function testGenerateIds()
     {
-        parent::setUp();
-        $api = new RestApi(getenv('CLIENT_ID'), getenv('CLIENT_SECRET'));
-        $api->setCredentials(getenv('ACCESS_TOKEN'), getenv('REFRESH_TOKEN'));
-        $api->setBackoffsCount(2); // Speeds up the tests
-        $this->client = new Client($api);
+        $ids = $this->client->generateIds(1);
+        $this->assertNotEmpty($ids);
+        $this->assertArrayHasKey('ids', $ids);
+        $this->assertCount(10, $ids['ids']);
+    }
+
+    public function testFileExists()
+    {
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic.csv',
+            'titanic'
+        );
+        $exists = $this->client->fileExists($gdFile['id']);
+        $this->assertTrue($exists);
+
+        $this->client->deleteFile($gdFile['id']);
     }
 
     public function testCreateFile()
     {
-        $gdFile = $this->client->createFile($this->testFilePath, $this->testFileName);
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
         $this->assertArrayHasKey('id', $gdFile);
         $this->assertArrayHasKey('name', $gdFile);
         $this->assertArrayHasKey('kind', $gdFile);
-        $this->assertEquals($this->testFileName, $gdFile['name']);
+        $this->assertEquals('titanic', $gdFile['name']);
         $this->assertEquals('drive#file', $gdFile['kind']);
 
         $this->client->deleteFile($gdFile['id']);
@@ -42,8 +49,8 @@ class ClientTest extends BaseTest
     {
         $folderId = getenv('GOOGLE_DRIVE_FOLDER');
         $gdFile = $this->client->createFile(
-            $this->testFilePath,
-            $this->testFileName,
+            $this->dataPath . '/in/tables/titanic.csv',
+            'titanic',
             [
                 'parents' => [$folderId]
             ]
@@ -54,27 +61,27 @@ class ClientTest extends BaseTest
         $this->assertArrayHasKey('name', $gdFile);
         $this->assertArrayHasKey('parents', $gdFile);
         $this->assertContains($folderId, $gdFile['parents']);
-        $this->assertEquals($this->testFileName, $gdFile['name']);
+        $this->assertEquals('titanic', $gdFile['name']);
 
         $this->client->deleteFile($gdFile['id']);
     }
 
     public function testGetFile()
     {
-        $gdFile = $this->client->createFile($this->testFilePath, $this->testFileName);
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
         $file = $this->client->getFile($gdFile['id']);
 
         $this->assertArrayHasKey('id', $file);
         $this->assertArrayHasKey('name', $file);
-        $this->assertEquals($this->testFileName, $file['name']);
+        $this->assertEquals('titanic', $file['name']);
 
         $this->client->deleteFile($gdFile['id']);
     }
 
     public function testUpdateFile()
     {
-        $gdFile = $this->client->createFile($this->testFilePath, $this->testFileName);
-        $res = $this->client->updateFile($gdFile['id'], $this->testFilePath, [
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
+        $res = $this->client->updateFile($gdFile['id'], $this->dataPath . '/in/tables/titanic.csv', [
             'name' => $gdFile['name'] . '_changed'
         ]);
 
@@ -89,7 +96,7 @@ class ClientTest extends BaseTest
 
     public function testDeleteFile()
     {
-        $gdFile = $this->client->createFile($this->testFilePath, $this->testFileName);
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
         $this->client->deleteFile($gdFile['id']);
 
         $this->expectException('GuzzleHttp\\Exception\\ClientException');
@@ -99,14 +106,14 @@ class ClientTest extends BaseTest
     public function testCreateSheet()
     {
         $res = $this->client->createSpreadsheet(
-            ['title' => $this->testFileName],
+            ['title' => 'titanic'],
             ['properties' => ['title' => 'my_test_sheet']]
         );
 
         $this->assertArrayHasKey('spreadsheetId', $res);
         $this->assertArrayHasKey('properties', $res);
         $this->assertArrayHasKey('sheets', $res);
-        $this->assertEquals($this->testFileName, $res['properties']['title']);
+        $this->assertEquals('titanic', $res['properties']['title']);
         $this->assertCount(1, $res['sheets']);
         $sheet = array_shift($res['sheets']);
         $this->assertArrayHasKey('properties', $sheet);
@@ -117,9 +124,29 @@ class ClientTest extends BaseTest
         $this->client->deleteFile($res['spreadsheetId']);
     }
 
+    public function testAddSheet()
+    {
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
+        $res = $this->client->addSheet($gdFile['id'], [
+            'properties' => ['title' => 'sheet_2']
+        ]);
+
+        $this->assertArrayHasKey('spreadsheetId', $res);
+        $this->assertArrayHasKey('replies', $res);
+        $this->assertEquals($gdFile['id'], $res['spreadsheetId']);
+
+        $res2 = $this->client->getSpreadsheet($gdFile['id']);
+
+        $this->assertArrayHasKey('spreadsheetId', $res2);
+        $this->assertEquals($gdFile['id'], $res2['spreadsheetId']);
+        $this->assertCount(2, $res2['sheets']);
+
+        $this->client->deleteFile($gdFile['id']);
+    }
+
     public function testGetSheet()
     {
-        $gdFile = $this->client->createFile($this->testFilePath, $this->testFileName);
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
         $spreadsheet = $this->client->getSpreadsheet($gdFile['id']);
 
         $this->assertArrayHasKey('spreadsheetId', $spreadsheet);
@@ -131,7 +158,7 @@ class ClientTest extends BaseTest
 
     public function testGetSheetValues()
     {
-        $gdFile = $this->client->createFile($this->testFilePath, $this->testFileName);
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
         $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
         $response = $this->client->getSpreadsheetValues(
             $gdFile['id'],
@@ -153,10 +180,10 @@ class ClientTest extends BaseTest
 
     public function testUpdateSheetValues()
     {
-        $gdFile = $this->client->createFile(ROOT_PATH . '/tests/data/in/titanic_1.csv', 'titanic_1');
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic_1.csv', 'titanic_1');
         $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
 
-        $values = $this->csvToArray(ROOT_PATH . '/tests/data/in/titanic_2.csv');
+        $values = $this->csvToArray($this->dataPath . '/in/tables/titanic_2.csv');
 
         $response =$this->client->updateSpreadsheetValues(
             $gdFile['id'],
@@ -184,9 +211,9 @@ class ClientTest extends BaseTest
 
     public function testAppendSheetValues()
     {
-        $gdFile = $this->client->createFile(ROOT_PATH . '/tests/data/in/titanic_1.csv', 'titanic');
+        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic_1.csv', 'titanic');
         $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
-        $values = $this->csvToArray(ROOT_PATH . '/tests/data/in/titanic_2.csv');
+        $values = $this->csvToArray($this->dataPath . '/in/tables/titanic_2.csv');
         array_shift($values); // skip header
 
         $response =$this->client->appendSpreadsheetValues(
@@ -195,7 +222,7 @@ class ClientTest extends BaseTest
             $values
         );
 
-        $expectedValues = $this->csvToArray(ROOT_PATH . '/tests/data/in/titanic.csv');
+        $expectedValues = $this->csvToArray(ROOT_PATH . '/tests/data/in/tables/titanic.csv');
         $gdValues = $this->client->getSpreadsheetValues(
             $response['spreadsheetId'],
             $gdSheet['sheets'][0]['properties']['title']

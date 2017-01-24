@@ -13,6 +13,13 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class ConfigDefinition implements ConfigurationInterface
 {
+    const TYPE_FILE = 'file';
+    const TYPE_SHEET = 'sheet';
+
+    const ACTION_CREATE = 'create';
+    const ACTION_UPDATE = 'update';
+    const ACTION_APPEND = 'append';
+
     /**
      * Generates the configuration tree builder.
      *
@@ -29,7 +36,7 @@ class ConfigDefinition implements ConfigurationInterface
                     ->isRequired()
                     ->cannotBeEmpty()
                 ->end()
-                ->arrayNode('sheets')
+                ->arrayNode('files')
                     ->isRequired()
                     ->prototype('array')
                         ->children()
@@ -39,13 +46,7 @@ class ConfigDefinition implements ConfigurationInterface
                             ->end()
                             ->scalarNode('fileId')
                             ->end()
-                            ->scalarNode('fileTitle')
-                                ->isRequired()
-                                ->cannotBeEmpty()
-                            ->end()
-                            ->scalarNode('sheetId')
-                            ->end()
-                            ->scalarNode('sheetTitle')
+                            ->scalarNode('title')
                                 ->isRequired()
                                 ->cannotBeEmpty()
                             ->end()
@@ -58,8 +59,21 @@ class ConfigDefinition implements ConfigurationInterface
                             ->enumNode('action')
                                 ->values(['create', 'update', 'append'])
                             ->end()
+                            ->scalarNode('tableId')
+                                ->isRequired()
+                            ->end()
                             ->booleanNode('enabled')
                                 ->defaultValue(true)
+                            ->end()
+                            ->arrayNode('sheets')
+                                ->prototype('array')
+                                    ->children()
+                                        ->scalarNode('title')
+                                            ->isRequired()
+                                            ->cannotBeEmpty()
+                                        ->end()
+                                    ->end()
+                                ->end()
                             ->end()
                         ->end()
                     ->end()

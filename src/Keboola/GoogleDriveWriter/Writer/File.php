@@ -9,43 +9,58 @@
 namespace Keboola\GoogleDriveWriter\Writer;
 
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleDriveWriter\Input;
 
 class File
 {
     /** @var Client */
     private $client;
 
-    public function __construct(Client $client)
+    /** @var Input */
+    private $input;
+
+    public function __construct(Client $client, Input $input)
     {
         $this->client = $client;
+        $this->input = $input;
     }
 
-    public function create($sheet)
+    public function create($file)
     {
         // generate new filename
-        $newTitle = $sheet['title'] . ' (' . date('Y-m-d H:i:s') . ')';
+        $newTitle = $file['title'] . ' (' . date('Y-m-d H:i:s') . ')';
 
         // create file
-        return $this->client->createFile($sheet['pathname'], $newTitle);
+        return $this->client->createFile(
+            $this->input->getInputTablePath($file['tableId']),
+            $newTitle,
+            ['parents' => $file['parents']]
+        );
     }
 
-    public function update($sheet)
+    public function update($file)
     {
         // check if file exists
-        $driveFile = null;
-        if ($sheet['fileId'] !== null) {
-            try {
-                $driveFile = $this->client->getFile($sheet['fileId']);
-            } catch (\Exception $e) {
-            }
+        if ($this->client->fileExists($file['fileId'])) {
+            // file exists
+            return $this->client->updateFile(
+                $file['fileId'],
+                $this->input->getInputTablePath($file['tableId']),
+                [
+                    'name' => $file['title'],
+                    'addParents' => $file['parents']
+                ]
+            );
         }
 
         // file don't exist
-        if ($driveFile === null) {
-            return $this->client->createFile($sheet['pathname'], $sheet['fileTitle']);
-        }
-
-        // file exists
-        return $this->client->updateFile($sheet);
+        return $this->client->createFile(
+            $this->input->getInputTablePath($file['tableId']),
+            $file['title'],
+            [
+                'id' => $file['fileId'],
+                'parents' => $file['parents']
+            ]
+        );
     }
 }
