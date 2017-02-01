@@ -214,7 +214,7 @@ class Client
             sprintf('%s%s', self::SPREADSHEETS, $fileId),
             'GET',
             [
-                'Accept' => 'application/json',
+                'Accept' => 'application/json'
             ]
         );
 
@@ -224,21 +224,21 @@ class Client
     /**
      * @param $spreadsheetId
      * @param $range
+     * @param array $params
      * @return array
-     * @throws \Keboola\Google\ClientBundle\Exception\RestApiException
      */
-    public function getSpreadsheetValues($spreadsheetId, $range)
+    public function getSpreadsheetValues($spreadsheetId, $range, $params = [])
     {
+        $uri = sprintf('%s%s/values/%s', self::SPREADSHEETS, $spreadsheetId, $range);
+        if (!empty($params)) {
+            $uri .= '?' . \GuzzleHttp\Psr7\build_query($params);
+        }
+
         $response = $this->api->request(
-            sprintf(
-                '%s%s/values/%s',
-                self::SPREADSHEETS,
-                $spreadsheetId,
-                $range
-            ),
+            $uri,
             'GET',
             [
-                'Accept' => 'application/json',
+                'Accept' => 'application/json'
             ]
         );
 
@@ -358,8 +358,6 @@ class Client
             ],
             [
                 'json' => [
-                    'range' => $range,
-                    'majorDimension' => 'ROWS',
                     'values' => $values
                 ]
             ]
@@ -394,6 +392,24 @@ class Client
                     'majorDimension' => 'ROWS',
                     'values' => $values
                 ]
+            ]
+        );
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    public function clearSpreadsheetValues($spreadsheetId, $range)
+    {
+        $response = $this->api->request(
+            sprintf(
+                '%s%s/values/%s:clear',
+                self::SPREADSHEETS,
+                $spreadsheetId,
+                $range
+            ),
+            'POST',
+            [
+                'Accept' => 'application/json',
             ]
         );
 

@@ -8,6 +8,7 @@
 
 namespace Keboola\GoogleDriveWriter;
 
+use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Psr\Http\Message\ResponseInterface;
 
@@ -72,9 +73,17 @@ class Writer
 
     public function createFile($file)
     {
+        $params = [
+            'parents' => $file['parents']
+        ];
+        if ($file['type'] == ConfigDefinition::TYPE_SPREADSHEET) {
+            $params['mimeType'] = Client::MIME_TYPE_SPREADSHEET;
+        }
+
         return $this->driveApi->createFile(
             $this->input->getInputTablePath($file['tableId']),
-            $file['title']
+            $file['title'],
+            $params
         );
     }
 }

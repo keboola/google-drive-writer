@@ -8,6 +8,8 @@
 
 namespace Keboola\GoogleDriveWriter;
 
+use Keboola\Csv\CsvFile;
+
 class Input
 {
     private $dataDir;
@@ -20,5 +22,17 @@ class Input
     public function getInputTablePath($tableId)
     {
         return sprintf('%s/in/tables/%s.csv', $this->dataDir, $tableId);
+    }
+
+    public function getInputCsv($tableId)
+    {
+        return new CsvFile($this->getInputTablePath($tableId));
+    }
+
+    public function countLines(CsvFile $csvFile)
+    {
+        $cnt = iterator_count($csvFile);
+        $csvFile->rewind();
+        return $cnt;
     }
 }

@@ -231,4 +231,9 @@ class ClientTest extends BaseTest
 
         $this->client->deleteFile($gdSheet['spreadsheetId']);
     }
+
+    public function testClearSheetValues()
+    {
+
+    }
 }

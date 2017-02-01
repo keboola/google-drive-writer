@@ -8,6 +8,7 @@
 namespace Keboola\GoogleDriveWriter\Tests;
 
 use GuzzleHttp\Exception\ClientException;
+use Keboola\Csv\CsvFile;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Keboola\GoogleDriveWriter\Test\BaseTest;
@@ -32,6 +33,8 @@ class FunctionalTest extends BaseTest
      */
     public function testCreateFile()
     {
+        $this->prepareDataFiles();
+
         $config = $this->prepareConfig();
         $config['parameters']['files'][] = [
             'id' => 0,
@@ -42,9 +45,9 @@ class FunctionalTest extends BaseTest
             'type' => ConfigDefinition::TYPE_FILE,
             'action' => ConfigDefinition::ACTION_CREATE,
             'tableId' => 'titanic',
-            'sheets' => [[
-                'title' => 'sheet1'
-            ]]
+//            'sheets' => [[
+//                'title' => 'sheet1'
+//            ]]
         ];
 
         $process = $this->runProcess($config);
@@ -62,6 +65,8 @@ class FunctionalTest extends BaseTest
      */
     public function testUpdateFile()
     {
+        $this->prepareDataFiles();
+
         // create file
         $gdFile = $this->client->createFile(
             $this->tmpDataPath . '/in/tables/titanic_1.csv',
@@ -96,11 +101,13 @@ class FunctionalTest extends BaseTest
     /**
      * Create or update a sheet
      */
-    public function testUpdateSheet()
+    public function testUpdateSpreadsheet()
     {
+        $this->prepareDataFiles();
+
         // create sheet
         $gdFile = $this->client->createFile(
-            $this->tmpDataPath . '/in/tables/titanic_1.csv',
+            $this->dataPath . '/in/tables/titanic_1.csv',
             'titanic_1',
             [
                 'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
@@ -109,12 +116,7 @@ class FunctionalTest extends BaseTest
         );
 
         $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
-
-        // rename sheet in spreadsheet
-        $this->client->updateSheet($gdFile['id'], [
-            'sheetId' => $gdSpreadsheet['sheets'][0]['properties']['sheetId'],
-            'title' => 'sheet1'
-        ]);
+        $sheetId = $gdSpreadsheet['sheets'][0]['properties']['sheetId'];
 
         // update sheet
         $config = $this->prepareConfig();
@@ -124,22 +126,98 @@ class FunctionalTest extends BaseTest
             'title' => 'titanic',
             'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SHEET,
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
             'action' => ConfigDefinition::ACTION_UPDATE,
-            'tableId' => 'titanic_2',
             'sheets' => [[
-                'title' => 'casualties'
+                'sheetId' => $sheetId,
+                'title' => 'casualties',
+                'tableId' => 'titanic_2'
             ]]
         ];
 
         $process = $this->runProcess($config);
-        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
 
-        $response = $this->client->getSpreadsheet($gdSheet['id']);
+        $response = $this->client->getSpreadsheet($gdFile['id']);
+        $values = $this->client->getSpreadsheetValues($gdFile['id'], 'casualties');
 
-        var_dump($response);
+        $this->assertEquals($gdFile['id'], $response['spreadsheetId']);
+        $this->assertEquals('titanic', $response['properties']['title']);
+        $this->assertEquals('casualties', $response['sheets'][0]['properties']['title']);
+        $this->assertEquals($this->csvToArray($this->dataPath . '/in/tables/titanic_2.csv'), $values['values']);
+    }
 
-        var_dump($response['sheets']);
+    public function testUpdateSpreadsheetLarge()
+    {
+        $this->prepareDataFiles();
+
+        // create sheet
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic_1',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $sheetId = $gdSpreadsheet['sheets'][0]['properties']['sheetId'];
+
+        // create large file
+        $inputCsvPath = $this->tmpDataPath . '/in/tables/large.csv';
+        touch($inputCsvPath);
+        $inputCsv = new CsvFile($inputCsvPath);
+        $inputCsv->writeRow(['id', 'random_string']);
+        for ($i = 0; $i < 2000; $i++) {
+            $inputCsv->writeRow([$i, uniqid()]);
+        }
+
+        // update sheet
+        $newSheetTitle = 'Long John Silver';
+        $config = $this->prepareConfig();
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'pirates',
+            'enabled' => true,
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'sheets' => [[
+                'sheetId' => $sheetId,
+                'title' => $newSheetTitle,
+                'tableId' => 'large'
+            ]]
+        ];
+
+        $process = $this->runProcess($config);
+
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $response = $this->client->getSpreadsheet($gdFile['id']);
+        $values = $this->client->getSpreadsheetValues(
+            $gdFile['id'],
+            urlencode($newSheetTitle),
+            [
+                'valueRenderOption' => 'UNFORMATTED_VALUE'
+            ]
+        );
+
+        $this->assertEquals($gdFile['id'], $response['spreadsheetId']);
+        $this->assertEquals('pirates', $response['properties']['title']);
+        $this->assertEquals($newSheetTitle, $response['sheets'][0]['properties']['title']);
+        $this->assertEquals($this->csvToArray($inputCsvPath), $values['values']);
+    }
+
+    public function testUpdateSpreadsheetAddSheet()
+    {
+
+    }
+
+    public function testUpdateSpreadsheetRemoveSheet()
+    {
+
     }
 
     /**
@@ -172,13 +250,6 @@ class FunctionalTest extends BaseTest
      */
     private function runProcess($config)
     {
-        $fs = new Filesystem();
-        $fs->remove($this->tmpDataPath);
-        $fs->mkdir($this->tmpDataPath);
-        $fs->mkdir($this->tmpDataPath . '/in/tables/');
-        $fs->copy($this->dataPath . '/in/tables/titanic.csv', $this->tmpDataPath . '/in/tables/titanic.csv');
-        $fs->copy($this->dataPath . '/in/tables/titanic_1.csv', $this->tmpDataPath . '/in/tables/titanic_1.csv');
-        $fs->copy($this->dataPath . '/in/tables/titanic_2.csv', $this->tmpDataPath . '/in/tables/titanic_2.csv');
         file_put_contents($this->tmpDataPath . '/config.json', json_encode($config));
 
         $process = new Process(sprintf('php run.php --data=%s', $this->tmpDataPath));
@@ -186,5 +257,15 @@ class FunctionalTest extends BaseTest
         $process->run();
 
         return $process;
+    }
+
+    private function prepareDataFiles() {
+        $fs = new Filesystem();
+        $fs->remove($this->tmpDataPath);
+        $fs->mkdir($this->tmpDataPath);
+        $fs->mkdir($this->tmpDataPath . '/in/tables/');
+        $fs->copy($this->dataPath . '/in/tables/titanic.csv', $this->tmpDataPath . '/in/tables/titanic.csv');
+        $fs->copy($this->dataPath . '/in/tables/titanic_1.csv', $this->tmpDataPath . '/in/tables/titanic_1.csv');
+        $fs->copy($this->dataPath . '/in/tables/titanic_2.csv', $this->tmpDataPath . '/in/tables/titanic_2.csv');
     }
 }
