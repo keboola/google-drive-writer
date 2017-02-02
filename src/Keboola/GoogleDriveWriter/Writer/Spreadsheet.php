@@ -203,7 +203,7 @@ class Spreadsheet
         $requests = [];
         foreach ($sheetsToAdd as $sheet) {
             $requests[] = [
-                'AddSheet' => [
+                'addSheet' => [
                     'properties' => [
                         'sheetId' => $sheet['sheetId'],
                         'title' => $sheet['title'],
@@ -214,8 +214,8 @@ class Spreadsheet
 
         foreach ($sheetsToRemove as $sheet) {
             $requests[] = [
-                'DeleteSheet' => [
-                    'sheetId' => $sheet['sheetId']
+                'deleteSheet' => [
+                    'sheetId' => $sheet['properties']['sheetId']
                 ]
             ];
         }

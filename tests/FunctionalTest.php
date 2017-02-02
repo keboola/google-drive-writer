@@ -209,12 +209,113 @@ class FunctionalTest extends BaseTest
 
     public function testUpdateSpreadsheetAddSheet()
     {
+        $this->prepareDataFiles();
 
+        // create sheet
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic_1',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $sheetId = $gdSpreadsheet['sheets'][0]['properties']['sheetId'];
+
+        // create and delete sheet from GD
+        $response = $this->client->addSheet($gdFile['id'], [
+            'properties' => [
+                'title' => 'titanic_2',
+            ]
+        ]);
+        $newSheet = $response['replies'][0]['addSheet'];
+
+        $this->client->deleteSheet($gdFile['id'], $newSheet['properties']['sheetId']);
+
+        // add new sheet to config
+        $config = $this->prepareConfig();
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic',
+            'enabled' => true,
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'sheets' => [
+                [
+                    'sheetId' => $sheetId,
+                    'title' => 'titanic_1',
+                    'tableId' => 'titanic_1'
+                ],
+                [
+                    'sheetId' => $newSheet['properties']['sheetId'],
+                    'title' => 'titanic_2',
+                    'tableId' => 'titanic_2'
+                ]
+            ]
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $this->assertEquals($newSheet['properties']['sheetId'], $gdSpreadsheet['sheets'][1]['properties']['sheetId']);
     }
 
     public function testUpdateSpreadsheetRemoveSheet()
     {
+        $this->prepareDataFiles();
 
+        // create sheet
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic_1',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $sheetId = $gdSpreadsheet['sheets'][0]['properties']['sheetId'];
+
+        // create another sheet
+        $this->client->addSheet($gdFile['id'], [
+            'properties' => [
+                'title' => 'titanic_2',
+            ]
+        ]);
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $this->assertCount(2, $gdSpreadsheet['sheets']);
+
+        //  new sheet is not in the config
+        $config = $this->prepareConfig();
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic',
+            'enabled' => true,
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'sheets' => [
+                [
+                    'sheetId' => $sheetId,
+                    'title' => 'titanic_1',
+                    'tableId' => 'titanic_1'
+                ]
+            ]
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $this->assertCount(1, $gdSpreadsheet['sheets']);
+        $this->assertEquals($sheetId, $gdSpreadsheet['sheets'][0]['properties']['sheetId']);
     }
 
     /**

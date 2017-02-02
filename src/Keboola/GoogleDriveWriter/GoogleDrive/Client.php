@@ -309,6 +309,24 @@ class Client
     }
 
     /**
+     * @param $spreadsheetId
+     * @param $sheetId
+     * @return mixed
+     */
+    public function deleteSheet($spreadsheetId, $sheetId)
+    {
+        return $this->batchUpdateSpreadsheet($spreadsheetId, [
+            'requests' => [
+                [
+                    'deleteSheet' => [
+                        'sheetId' => $sheetId
+                    ]
+                ]
+            ]
+        ]);
+    }
+
+    /**
      * Batch Update Spreadsheet Metadata
      *
      * @param $spreadsheetId
