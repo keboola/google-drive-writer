@@ -29,8 +29,8 @@ class Spreadsheet
 
     public function update($spreadsheet)
     {
+        // get metadata from Google Drive (file and spreadsheet)
         $gdSpreadsheet = $this->getCreateSpreadsheet($spreadsheet);
-
         $gdFile = $this->client->getFile($spreadsheet['fileId'], ['id', 'name', 'parents']);
 
         // sync metadata
@@ -41,39 +41,7 @@ class Spreadsheet
         try {
             $responses = [];
             foreach ($spreadsheet['sheets'] as $sheet) {
-                $csvFile = $this->input->getInputCsv($sheet['tableId']);
-                $columnCount = $csvFile->getColumnsCount();
-                $rowCount = $this->input->countLines($csvFile);
-
-                // update sheets metadata (title, rows and cols count) first
-                $this->updateSheetMetadata($spreadsheet['fileId'], $sheet, [
-                    'rowCount' => $rowCount,
-                    'columnCount' => $columnCount
-                ]);
-
-                // clear values
-                $this->client->clearSpreadsheetValues($spreadsheet['fileId'], urlencode($sheet['title']));
-
-                // insert new values
-                $offset = 1;
-                $limit = 1000;
-                while ($csvFile->current()) {
-                    $i = 0;
-                    $values = [];
-                    while ($i < $limit && $csvFile->current()) {
-                        $values[] = $csvFile->current();
-                        $csvFile->next();
-                        $i++;
-                    }
-
-                    $responses[] = $this->client->updateSpreadsheetValues(
-                        $spreadsheet['fileId'],
-                        $this->getRange($sheet['title'], $columnCount, $offset, $limit),
-                        $values
-                    );
-
-                    $offset = $offset + $i;
-                }
+                $this->updateSheetValues($spreadsheet['fileId'], $sheet);
             }
 
             return $responses;
@@ -86,9 +54,31 @@ class Spreadsheet
         }
     }
 
-    public function append($sheet)
+    public function append($spreadsheet)
     {
+        // get metadata from Google Drive (file and spreadsheet)
+        $gdSpreadsheet = $this->getCreateSpreadsheet($spreadsheet);
+        $gdFile = $this->client->getFile($spreadsheet['fileId'], ['id', 'name', 'parents']);
 
+        // sync metadata
+        $this->syncFileMetadata($spreadsheet, $gdFile);
+        $this->syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet);
+
+        // upload values for each sheet in spreadsheet
+        try {
+            $responses = [];
+            foreach ($spreadsheet['sheets'] as $sheet) {
+                $this->appendSheetValues($spreadsheet['fileId'], $sheet);
+            }
+
+            return $responses;
+        } catch (ClientException $e) {
+            //@todo handle API exception
+            throw new UserException($e->getMessage(), 0, $e, [
+                'response' => $e->getResponse()->getBody()->getContents(),
+                'reasonPhrase' => $e->getResponse()->getReasonPhrase()
+            ]);
+        }
     }
 
     /**
@@ -98,7 +88,7 @@ class Spreadsheet
      * @param int $rowLimit
      * @return string
      */
-    public function getRange($sheetTitle, $columnCount, $rowOffset = 1, $rowLimit = 1000)
+    private function getRange($sheetTitle, $columnCount, $rowOffset = 1, $rowLimit = 1000)
     {
         $lastColumn = $this->getColumnA1($columnCount-1);
 
@@ -126,6 +116,77 @@ class Spreadsheet
                 ]
             );
             return $this->client->getSpreadsheet($gdFile['id']);
+        }
+    }
+
+    private function updateSheetValues($spreadsheetId, $sheet)
+    {
+        $csvFile = $this->input->getInputCsv($sheet['tableId']);
+        $columnCount = $csvFile->getColumnsCount();
+        $rowCount = $this->input->countLines($csvFile);
+
+        // update sheets metadata (title, rows and cols count) first
+        $this->updateSheetMetadata($spreadsheetId, $sheet, [
+            'rowCount' => $rowCount,
+            'columnCount' => $columnCount
+        ]);
+
+        // clear values
+        $this->client->clearSpreadsheetValues($spreadsheetId, urlencode($sheet['title']));
+
+        // insert new values
+        $offset = 1;
+        $limit = 1000;
+        while ($csvFile->current()) {
+            $i = 0;
+            $values = [];
+            while ($i < $limit && $csvFile->current()) {
+                $values[] = $csvFile->current();
+                $csvFile->next();
+                $i++;
+            }
+
+            $responses[] = $this->client->updateSpreadsheetValues(
+                $spreadsheetId,
+                $this->getRange($sheet['title'], $columnCount, $offset, $limit),
+                $values
+            );
+
+            $offset = $offset + $i;
+        }
+    }
+
+    private function appendSheetValues($spreadsheetId, $sheet)
+    {
+        $csvFile = $this->input->getInputCsv($sheet['tableId']);
+        $columnCount = $csvFile->getColumnsCount();
+        $rowCount = $this->input->countLines($csvFile);
+
+        // update sheets metadata (title, rows and cols count) first
+        $this->updateSheetMetadata($spreadsheetId, $sheet, [
+            'rowCount' => $rowCount,
+            'columnCount' => $columnCount
+        ]);
+
+        // insert new values
+        $offset = 1;
+        $limit = 1000;
+        while ($csvFile->current()) {
+            $i = 0;
+            $values = [];
+            while ($i < $limit && $csvFile->current()) {
+                $values[] = $csvFile->current();
+                $csvFile->next();
+                $i++;
+            }
+
+            $responses[] = $this->client->appendSpreadsheetValues(
+                $spreadsheetId,
+                urlencode($sheet['title']),
+                $values
+            );
+
+            $offset = $offset + $i;
         }
     }
 

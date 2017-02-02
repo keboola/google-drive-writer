@@ -144,6 +144,9 @@ class FunctionalTest extends BaseTest
         $this->assertEquals($this->csvToArray($this->dataPath . '/in/tables/titanic_2.csv'), $values['values']);
     }
 
+    /**
+     * Update large Spreadsheet
+     */
     public function testUpdateSpreadsheetLarge()
     {
         $this->prepareDataFiles();
@@ -207,6 +210,9 @@ class FunctionalTest extends BaseTest
         $this->assertEquals($this->csvToArray($inputCsvPath), $values['values']);
     }
 
+    /**
+     * Add sheet missing in Google Drive
+     */
     public function testUpdateSpreadsheetAddSheet()
     {
         $this->prepareDataFiles();
@@ -265,6 +271,9 @@ class FunctionalTest extends BaseTest
         $this->assertEquals($newSheet['properties']['sheetId'], $gdSpreadsheet['sheets'][1]['properties']['sheetId']);
     }
 
+    /**
+     * Delete sheet from Google Drive that is not in config
+     */
     public function testUpdateSpreadsheetRemoveSheet()
     {
         $this->prepareDataFiles();
@@ -323,7 +332,45 @@ class FunctionalTest extends BaseTest
      */
     public function testAppendSheet()
     {
+        $this->prepareDataFiles();
 
+        // create sheet
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $sheetId = $gdSpreadsheet['sheets'][0]['properties']['sheetId'];
+
+        // append other data do the sheet
+        $config = $this->prepareConfig();
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic',
+            'enabled' => true,
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'action' => ConfigDefinition::ACTION_APPEND,
+            'sheets' => [
+                [
+                    'sheetId' => $sheetId,
+                    'title' => 'casualties',
+                    'tableId' => 'titanic_2_headerless'
+                ]
+            ]
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+
+        $response = $this->client->getSpreadsheetValues($gdFile['id'], 'casualties');
+        $this->assertEquals($this->csvToArray($this->dataPath . '/in/tables/titanic.csv'), $response['values']);
     }
 
     /**
@@ -373,5 +420,9 @@ class FunctionalTest extends BaseTest
         $fs->copy($this->dataPath . '/in/tables/titanic.csv', $this->tmpDataPath . '/in/tables/titanic.csv');
         $fs->copy($this->dataPath . '/in/tables/titanic_1.csv', $this->tmpDataPath . '/in/tables/titanic_1.csv');
         $fs->copy($this->dataPath . '/in/tables/titanic_2.csv', $this->tmpDataPath . '/in/tables/titanic_2.csv');
+        $fs->copy(
+            $this->dataPath . '/in/tables/titanic_2_headerless.csv',
+            $this->tmpDataPath . '/in/tables/titanic_2_headerless.csv'
+        );
     }
 }
