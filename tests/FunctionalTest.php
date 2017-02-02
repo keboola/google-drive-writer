@@ -45,9 +45,6 @@ class FunctionalTest extends BaseTest
             'type' => ConfigDefinition::TYPE_FILE,
             'action' => ConfigDefinition::ACTION_CREATE,
             'tableId' => 'titanic',
-//            'sheets' => [[
-//                'title' => 'sheet1'
-//            ]]
         ];
 
         $process = $this->runProcess($config);
@@ -136,7 +133,7 @@ class FunctionalTest extends BaseTest
         ];
 
         $process = $this->runProcess($config);
-        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
 
         $response = $this->client->getSpreadsheet($gdFile['id']);
         $values = $this->client->getSpreadsheetValues($gdFile['id'], 'casualties');
@@ -238,6 +235,14 @@ class FunctionalTest extends BaseTest
 
     /**
      * Create New Spreadsheet using sync action
+     */
+    public function testSyncActionCreateSpreadsheet()
+    {
+
+    }
+
+    /**
+     * Add Sheet to Spreadsheet using sync action
      */
     public function testSyncActionCreateSheet()
     {

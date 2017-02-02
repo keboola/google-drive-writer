@@ -3,6 +3,7 @@
 namespace Keboola\GoogleDriveWriter\Tests;
 
 use GuzzleHttp\Exception\ClientException;
+use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Keboola\GoogleDriveWriter\Test\BaseTest;
 
 /**
@@ -15,7 +16,7 @@ class ClientTest extends BaseTest
 {
     public function testGenerateIds()
     {
-        $ids = $this->client->generateIds(1);
+        $ids = $this->client->generateIds();
         $this->assertNotEmpty($ids);
         $this->assertArrayHasKey('ids', $ids);
         $this->assertCount(10, $ids['ids']);
@@ -126,7 +127,14 @@ class ClientTest extends BaseTest
 
     public function testAddSheet()
     {
-        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
         $res = $this->client->addSheet($gdFile['id'], [
             'properties' => ['title' => 'sheet_2']
         ]);
@@ -146,7 +154,14 @@ class ClientTest extends BaseTest
 
     public function testGetSheet()
     {
-        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
         $spreadsheet = $this->client->getSpreadsheet($gdFile['id']);
 
         $this->assertArrayHasKey('spreadsheetId', $spreadsheet);
@@ -158,7 +173,14 @@ class ClientTest extends BaseTest
 
     public function testGetSheetValues()
     {
-        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic.csv', 'titanic');
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
         $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
         $response = $this->client->getSpreadsheetValues(
             $gdFile['id'],
@@ -180,7 +202,14 @@ class ClientTest extends BaseTest
 
     public function testUpdateSheetValues()
     {
-        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic_1.csv', 'titanic_1');
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic_1',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
         $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
 
         $values = $this->csvToArray($this->dataPath . '/in/tables/titanic_2.csv');
@@ -211,7 +240,14 @@ class ClientTest extends BaseTest
 
     public function testAppendSheetValues()
     {
-        $gdFile = $this->client->createFile($this->dataPath . '/in/tables/titanic_1.csv', 'titanic');
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
         $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
         $values = $this->csvToArray($this->dataPath . '/in/tables/titanic_2.csv');
         array_shift($values); // skip header
@@ -234,6 +270,20 @@ class ClientTest extends BaseTest
 
     public function testClearSheetValues()
     {
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+        $gdSheet = $this->client->getSpreadsheet($gdFile['id']);
+        $sheetTitle = $gdSheet['sheets'][0]['properties']['title'];
 
+        $this->client->clearSpreadsheetValues($gdFile['id'], $sheetTitle);
+        $values = $this->client->getSpreadsheetValues($gdFile['id'], $sheetTitle);
+
+        $this->assertArrayNotHasKey('values', $values);
     }
 }

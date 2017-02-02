@@ -29,32 +29,13 @@ class Spreadsheet
 
     public function update($spreadsheet)
     {
-        try {
-            $gdSpreadsheet = $this->client->getSpreadsheet($spreadsheet['fileId']);
-        } catch (ClientException $e) {
-            if ($e->getResponse()->getStatusCode() !== 404) {
-                throw $e;
-            }
-
-            // file doesn't exist
-            $gdFile = $this->client->createFile(
-                $this->input->getInputTablePath($spreadsheet['tableId']),
-                $spreadsheet['title'],
-                [
-                    'parents' => $spreadsheet['parents'],
-                    'mimeType' => Client::MIME_TYPE_SPREADSHEET
-                ]
-            );
-
-            $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
-        }
+        $gdSpreadsheet = $this->getCreateSpreadsheet($spreadsheet);
 
         $gdFile = $this->client->getFile($spreadsheet['fileId'], ['id', 'name', 'parents']);
 
         // sync metadata
         $this->syncFileMetadata($spreadsheet, $gdFile);
-//        @todo: uncomment
-//        $this->syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet);
+        $this->syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet);
 
         // upload values for each sheet in spreadsheet
         try {
@@ -110,6 +91,13 @@ class Spreadsheet
 
     }
 
+    /**
+     * @param $sheetTitle
+     * @param $columnCount
+     * @param int $rowOffset
+     * @param int $rowLimit
+     * @return string
+     */
     public function getRange($sheetTitle, $columnCount, $rowOffset = 1, $rowLimit = 1000)
     {
         $lastColumn = $this->getColumnA1($columnCount-1);
@@ -120,6 +108,31 @@ class Spreadsheet
         return urlencode($sheetTitle) . '!' . $start . ':' . $end;
     }
 
+    private function getCreateSpreadsheet($spreadsheet)
+    {
+        try {
+            return $this->client->getSpreadsheet($spreadsheet['fileId']);
+        } catch (ClientException $e) {
+            if ($e->getResponse()->getStatusCode() !== 404) {
+                throw $e;
+            }
+            // file doesn't exist
+            $gdFile = $this->client->createFile(
+                $this->input->getInputTablePath($spreadsheet['tableId']),
+                $spreadsheet['title'],
+                [
+                    'parents' => $spreadsheet['parents'],
+                    'mimeType' => Client::MIME_TYPE_SPREADSHEET
+                ]
+            );
+            return $this->client->getSpreadsheet($gdFile['id']);
+        }
+    }
+
+    /**
+     * @param $columnNumber
+     * @return string
+     */
     private function getColumnA1($columnNumber)
     {
         $alphas = range('A', 'Z');
@@ -171,18 +184,47 @@ class Spreadsheet
      */
     private function syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet)
     {
-        //@todo sheets - addSheet / removeSheet
-        $requests = [];
-        foreach ($spreadsheet['sheets'] as $sheet) {
-            $requests[] = [
+        $sheetsInGD = array_map(function ($sheet) {
+            return $sheet['properties']['sheetId'];
+        }, $gdSpreadsheet['sheets']);
 
+        $sheetsInConfig = array_map(function ($sheet) {
+            return $sheet['sheetId'];
+        }, $spreadsheet['sheets']);
+
+        $sheetsToAdd = array_filter($spreadsheet['sheets'], function ($sheet) use ($sheetsInGD) {
+            return !in_array($sheet['sheetId'], $sheetsInGD);
+        });
+
+        $sheetsToRemove = array_filter($gdSpreadsheet['sheets'], function ($sheet) use ($sheetsInConfig) {
+            return !in_array($sheet['properties']['sheetId'], $sheetsInConfig);
+        });
+
+        $requests = [];
+        foreach ($sheetsToAdd as $sheet) {
+            $requests[] = [
+                'AddSheet' => [
+                    'properties' => [
+                        'sheetId' => $sheet['sheetId'],
+                        'title' => $sheet['title'],
+                    ]
+                ]
             ];
         }
 
-        // rename sheet in spreadsheet
-        $this->client->batchUpdateSpreadsheet($gdSpreadsheet['spreadsheetId'], [
-            'requests' => $requests
-        ]);
+        foreach ($sheetsToRemove as $sheet) {
+            $requests[] = [
+                'DeleteSheet' => [
+                    'sheetId' => $sheet['sheetId']
+                ]
+            ];
+        }
+
+        if (!empty($requests)) {
+            $this->client->batchUpdateSpreadsheet($gdSpreadsheet['spreadsheetId'], [
+                'requests' => $requests
+            ]);
+        }
     }
 
     /**
@@ -210,9 +252,10 @@ class Spreadsheet
             ]
         ];
 
-        // rename sheet in spreadsheet
-        $this->client->batchUpdateSpreadsheet($spreadsheetId, [
-            'requests' => $requests
-        ]);
+        if (!empty($requests)) {
+            $this->client->batchUpdateSpreadsheet($spreadsheetId, [
+                'requests' => $requests
+            ]);
+        }
     }
 }
