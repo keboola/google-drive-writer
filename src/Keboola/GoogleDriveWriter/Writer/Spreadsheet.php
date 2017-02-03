@@ -9,6 +9,8 @@
 namespace Keboola\GoogleDriveWriter\Writer;
 
 use GuzzleHttp\Exception\ClientException;
+use Keboola\GoogleDriveWriter\Application;
+use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Keboola\GoogleDriveWriter\Input;
@@ -27,7 +29,7 @@ class Spreadsheet
         $this->input = $input;
     }
 
-    public function update($spreadsheet)
+    public function process($spreadsheet)
     {
         // get metadata from Google Drive (file and spreadsheet)
         $gdSpreadsheet = $this->getCreateSpreadsheet($spreadsheet);
@@ -37,41 +39,16 @@ class Spreadsheet
         $this->syncFileMetadata($spreadsheet, $gdFile);
         $this->syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet);
 
-        // upload values for each sheet in spreadsheet
         try {
-            $responses = [];
             foreach ($spreadsheet['sheets'] as $sheet) {
-                $this->updateSheetValues($spreadsheet['fileId'], $sheet);
+                if ($sheet['action'] == 'update') {
+                    $this->updateSheetValues($spreadsheet['fileId'], $sheet);
+                } elseif ($sheet['action'] == 'append') {
+                    $this->appendSheetValues($spreadsheet['fileId'], $sheet);
+                } else {
+                    throw new ApplicationException(sprintf("Action '%s' not allowed", $sheet['action']));
+                }
             }
-
-            return $responses;
-        } catch (ClientException $e) {
-            //@todo handle API exception
-            throw new UserException($e->getMessage(), 0, $e, [
-                'response' => $e->getResponse()->getBody()->getContents(),
-                'reasonPhrase' => $e->getResponse()->getReasonPhrase()
-            ]);
-        }
-    }
-
-    public function append($spreadsheet)
-    {
-        // get metadata from Google Drive (file and spreadsheet)
-        $gdSpreadsheet = $this->getCreateSpreadsheet($spreadsheet);
-        $gdFile = $this->client->getFile($spreadsheet['fileId'], ['id', 'name', 'parents']);
-
-        // sync metadata
-        $this->syncFileMetadata($spreadsheet, $gdFile);
-        $this->syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet);
-
-        // upload values for each sheet in spreadsheet
-        try {
-            $responses = [];
-            foreach ($spreadsheet['sheets'] as $sheet) {
-                $this->appendSheetValues($spreadsheet['fileId'], $sheet);
-            }
-
-            return $responses;
         } catch (ClientException $e) {
             //@todo handle API exception
             throw new UserException($e->getMessage(), 0, $e, [

@@ -80,6 +80,32 @@ class Client
      */
     public function createFile($pathname, $title, $params = [])
     {
+        $fileMetadata = $this->createFileMetadata($title, $params);
+
+        $mediaUrl = sprintf('%s/%s?uploadType=media', self::DRIVE_UPLOAD, $fileMetadata['id']);
+
+        $response = $this->api->request(
+            $mediaUrl,
+            'PATCH',
+            [
+                'Content-Type' => 'text/csv',
+                'Content-Length' => filesize($pathname)
+            ],
+            [
+                'body' => \GuzzleHttp\Psr7\stream_for(fopen($pathname, 'r'))
+            ]
+        );
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    /**
+     * @param $title
+     * @param $params
+     * @return mixed
+     */
+    public function createFileMetadata($title, $params)
+    {
         $body = [
             'name' => $title
         ];
@@ -95,23 +121,7 @@ class Client
             ]
         );
 
-        $responseJson = json_decode($response->getBody(), true);
-
-        $mediaUrl = sprintf('%s/%s?uploadType=media', self::DRIVE_UPLOAD, $responseJson['id']);
-
-        $response = $this->api->request(
-            $mediaUrl,
-            'PATCH',
-            [
-                'Content-Type' => 'text/csv',
-                'Content-Length' => filesize($pathname)
-            ],
-            [
-                'body' => \GuzzleHttp\Psr7\stream_for(fopen($pathname, 'r'))
-            ]
-        );
-
-        return json_decode($response->getBody()->getContents(), true);
+        return json_decode($response->getBody(), true);
     }
 
     /**

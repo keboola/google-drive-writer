@@ -8,6 +8,7 @@
 
 namespace Keboola\GoogleDriveWriter\Writer;
 
+use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Keboola\GoogleDriveWriter\Input;
 
@@ -25,7 +26,18 @@ class File
         $this->input = $input;
     }
 
-    public function create($file)
+    public function process($file)
+    {
+        if ($file['action'] == 'update') {
+            return $this->update($file);
+        } elseif ($file['action'] == 'create') {
+            return $this->create($file);
+        } else {
+            throw new ApplicationException(sprintf("Action '%s' not allowed", $file['action']));
+        }
+    }
+
+    private function create($file)
     {
         // generate new filename
         $newTitle = $file['title'] . ' (' . date('Y-m-d H:i:s') . ')';
@@ -38,7 +50,7 @@ class File
         );
     }
 
-    public function update($file)
+    private function update($file)
     {
         // check if file exists
         if ($this->client->fileExists($file['fileId'])) {

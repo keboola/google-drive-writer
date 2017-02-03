@@ -121,14 +121,14 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
-            'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
             'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'action' => ConfigDefinition::ACTION_UPDATE,
             'sheets' => [[
                 'sheetId' => $sheetId,
                 'title' => 'casualties',
-                'tableId' => 'titanic_2'
+                'tableId' => 'titanic_2',
+                'action' => ConfigDefinition::ACTION_UPDATE,
+                'enabled' => true
             ]]
         ];
 
@@ -180,14 +180,14 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'pirates',
-            'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
             'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'action' => ConfigDefinition::ACTION_UPDATE,
             'sheets' => [[
                 'sheetId' => $sheetId,
                 'title' => $newSheetTitle,
-                'tableId' => 'large'
+                'tableId' => 'large',
+                'action' => ConfigDefinition::ACTION_UPDATE,
+                'enabled' => true
             ]]
         ];
 
@@ -246,20 +246,22 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
-            'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
             'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'action' => ConfigDefinition::ACTION_UPDATE,
             'sheets' => [
                 [
                     'sheetId' => $sheetId,
                     'title' => 'titanic_1',
-                    'tableId' => 'titanic_1'
+                    'tableId' => 'titanic_1',
+                    'action' => ConfigDefinition::ACTION_UPDATE,
+                    'enabled' => true
                 ],
                 [
                     'sheetId' => $newSheet['properties']['sheetId'],
                     'title' => 'titanic_2',
-                    'tableId' => 'titanic_2'
+                    'tableId' => 'titanic_2',
+                    'action' => ConfigDefinition::ACTION_UPDATE,
+                    'enabled' => true
                 ]
             ]
         ];
@@ -307,15 +309,15 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
-            'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
             'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'action' => ConfigDefinition::ACTION_UPDATE,
             'sheets' => [
                 [
                     'sheetId' => $sheetId,
                     'title' => 'titanic_1',
-                    'tableId' => 'titanic_1'
+                    'tableId' => 'titanic_1',
+                    'action' => ConfigDefinition::ACTION_UPDATE,
+                    'enabled' => true
                 ]
             ]
         ];
@@ -334,7 +336,7 @@ class FunctionalTest extends BaseTest
     {
         $this->prepareDataFiles();
 
-        // create sheet
+        // create spreadsheet
         $gdFile = $this->client->createFile(
             $this->dataPath . '/in/tables/titanic_1.csv',
             'titanic',
@@ -353,15 +355,16 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
-            'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
             'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'action' => ConfigDefinition::ACTION_APPEND,
+
             'sheets' => [
                 [
                     'sheetId' => $sheetId,
                     'title' => 'casualties',
-                    'tableId' => 'titanic_2_headerless'
+                    'tableId' => 'titanic_2_headerless',
+                    'action' => ConfigDefinition::ACTION_APPEND,
+                    'enabled' => true
                 ]
             ]
         ];
@@ -378,7 +381,25 @@ class FunctionalTest extends BaseTest
      */
     public function testSyncActionCreateFile()
     {
+        $this->prepareDataFiles();
 
+        $config = $this->prepareConfig();
+        $config['action'] = 'createFile';
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'title' => 'titanic',
+            'enabled' => true,
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_FILE,
+            'action' => ConfigDefinition::ACTION_UPDATE
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $response = json_decode($process->getOutput(), true);
+        $gdFile = $this->client->getFile($response['file']['id']);
+        $this->assertArrayHasKey('id', $gdFile);
+        $this->assertEquals('titanic', $gdFile['name']);
     }
 
     /**
@@ -386,13 +407,72 @@ class FunctionalTest extends BaseTest
      */
     public function testSyncActionCreateSpreadsheet()
     {
+        $this->prepareDataFiles();
 
+        $config = $this->prepareConfig();
+        $config['action'] = 'createSpreadsheet';
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'title' => 'titanic',
+            'enabled' => true,
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'action' => ConfigDefinition::ACTION_UPDATE
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $response = json_decode($process->getOutput(), true);
+        $gdFile = $this->client->getSpreadsheet($response['spreadsheet']['spreadsheetId']);
+        $this->assertArrayHasKey('spreadsheetId', $gdFile);
+        $this->assertEquals('titanic', $gdFile['properties']['title']);
     }
 
     /**
-     * Add Sheet to Spreadsheet using sync action
+     * Add Sheet to a Spreadsheet using sync action
      */
-    public function testSyncActionCreateSheet()
+    public function testSyncActionAddSheet()
+    {
+//        $this->prepareDataFiles();
+//
+//        // create spreadsheet
+//        $gdFile = $this->client->createFile(
+//            $this->dataPath . '/in/tables/titanic_1.csv',
+//            'titanic',
+//            [
+//                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+//                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+//            ]
+//        );
+//
+//        $config = $this->prepareConfig();
+//        $config['action'] = 'addSheet';
+//        $config['parameters']['files'][] = [
+//            'id' => 0,
+//            'title' => 'titanic',
+//            'enabled' => true,
+//            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+//            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+//            'action' => ConfigDefinition::ACTION_UPDATE
+//        ];
+//
+//        $process = $this->runProcess($config);
+//
+//        var_dump($process->getOutput());
+//        var_dump($process->getErrorOutput());
+//
+//        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+//
+//        $response = json_decode($process->getOutput(), true);
+//        $gdFile = $this->client->getSpreadsheet($response['fileId']);
+//
+//        var_dump($gdFile);
+//
+//        $this->assertArrayHasKey('spreadsheetId', $gdFile);
+//        $this->assertEquals('titanic', $gdFile['properties']['title']);
+    }
+
+    public function testSyncActionDeleteSheet()
     {
 
     }

@@ -112,12 +112,34 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $res = $writer->createFile(array_shift($this->container['parameters']['files']));
+        $res = $writer->createFileMetadata($this->container['parameters']['files'][0]);
 
         return [
             'status' => 'ok',
-            'fileId' => $res['id']
+            'file' => $res
         ];
+    }
+
+    protected function createSpreadsheetAction()
+    {
+        /** @var Writer $writer */
+        $writer = $this->container['writer'];
+        $res = $writer->createSpreadsheet($this->container['parameters']['files'][0]);
+
+        return [
+            'status' => 'ok',
+            'spreadsheet' => $res
+        ];
+    }
+
+    protected function addSheetAction()
+    {
+
+    }
+
+    protected function deleteSheetAction()
+    {
+
     }
 
     private function validateParameters($parameters)

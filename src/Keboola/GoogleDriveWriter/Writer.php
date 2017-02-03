@@ -31,7 +31,8 @@ class Writer
 
         $this->driveApi->getApi()->setBackoffsCount(7);
         $this->driveApi->getApi()->setBackoffCallback403($this->getBackoffCallback403());
-        $this->driveApi->getApi()->setRefreshTokenCallback(function($accessToken, $refreshToken) {});
+        $this->driveApi->getApi()->setRefreshTokenCallback(function ($accessToken, $refreshToken) {
+        });
     }
 
     public function getBackoffCallback403()
@@ -51,27 +52,25 @@ class Writer
         };
     }
 
-    public function process($files)
+    public function process(array $files)
     {
         foreach ($files as $file) {
-            $actionName = $file['action'];
             $actionClassName = sprintf('%s\\%s\\%s', __NAMESPACE__, 'Writer', ucfirst($file['type']));
 
             $this->logger->info(sprintf(
-                "Uploading file '%s'. ID: '%s'. Type: '%s'. Action: '%s'",
+                "Uploading file '%s'. ID: '%s'. Type: '%s'",
                 $file['title'],
                 $file['fileId'],
-                $file['type'],
-                $file['action']
+                $file['type']
             ));
 
-            (new $actionClassName($this->driveApi, $this->input))->$actionName($file);
+            (new $actionClassName($this->driveApi, $this->input))->process($file);
 
             $this->logger->info(sprintf("Upload successful"));
         }
     }
 
-    public function createFile($file)
+    public function createFileMetadata(array $file)
     {
         $params = [
             'parents' => $file['parents']
@@ -80,10 +79,13 @@ class Writer
             $params['mimeType'] = Client::MIME_TYPE_SPREADSHEET;
         }
 
-        return $this->driveApi->createFile(
-            $this->input->getInputTablePath($file['tableId']),
-            $file['title'],
-            $params
-        );
+        return $this->driveApi->createFileMetadata($file['title'], $params);
+    }
+
+    public function createSpreadsheet(array $file)
+    {
+        $gdFile = $this->createFileMetadata($file);
+
+        return $this->driveApi->getSpreadsheet($gdFile['id']);
     }
 }

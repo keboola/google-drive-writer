@@ -39,7 +39,6 @@ try {
     $logger->log('error', $e->getMessage(), (array) $e->getData());
     exit(2);
 } catch (\Exception $e) {
-    var_dump($e->getMessage()); die;
     $logger->log('error', $e->getMessage(), [
         'errFile' => $e->getFile(),
         'errLine' => $e->getLine(),
