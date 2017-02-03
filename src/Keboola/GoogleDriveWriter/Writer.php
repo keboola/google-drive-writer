@@ -10,6 +10,7 @@ namespace Keboola\GoogleDriveWriter;
 
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleDriveWriter\Writer\WriterInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class Writer
@@ -64,7 +65,9 @@ class Writer
                 $file['type']
             ));
 
-            (new $actionClassName($this->driveApi, $this->input))->process($file);
+            /** @var WriterInterface $writer */
+            $writer = (new $actionClassName($this->driveApi, $this->input));
+            $writer->process($file);
 
             $this->logger->info(sprintf("Upload successful"));
         }
@@ -87,5 +90,18 @@ class Writer
         $gdFile = $this->createFileMetadata($file);
 
         return $this->driveApi->getSpreadsheet($gdFile['id']);
+    }
+
+    public function addSheet($spreadsheet)
+    {
+        return $this->driveApi->addSheet($spreadsheet['fileId'], $spreadsheet['sheets'][0]);
+    }
+
+    public function deleteSheet($spreadsheet)
+    {
+        return $this->driveApi->deleteSheet(
+            $spreadsheet['fileId'],
+            $spreadsheet['sheets'][0]['properties']['sheetId']
+        );
     }
 }

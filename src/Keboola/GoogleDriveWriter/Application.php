@@ -134,12 +134,26 @@ class Application
 
     protected function addSheetAction()
     {
+        /** @var Writer $writer */
+        $writer = $this->container['writer'];
+        $res = $writer->addSheet($this->container['parameters']['files'][0]);
 
+        return [
+            'status' => 'ok',
+            'spreadsheet' => $res
+        ];
     }
 
     protected function deleteSheetAction()
     {
+        /** @var Writer $writer */
+        $writer = $this->container['writer'];
+        $res = $writer->createSpreadsheet($this->container['parameters']['files'][0]);
 
+        return [
+            'status' => 'ok',
+            'spreadsheet' => $res
+        ];
     }
 
     private function validateParameters($parameters)
