@@ -433,48 +433,96 @@ class FunctionalTest extends BaseTest
      */
     public function testSyncActionAddSheet()
     {
-//        $this->prepareDataFiles();
-//
-//        // create spreadsheet
-//        $gdFile = $this->client->createFile(
-//            $this->dataPath . '/in/tables/titanic_1.csv',
-//            'titanic',
-//            [
-//                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-//                'mimeType' => Client::MIME_TYPE_SPREADSHEET
-//            ]
-//        );
-//
-//        $config = $this->prepareConfig();
-//        $config['action'] = 'addSheet';
-//        $config['parameters']['files'][] = [
-//            'id' => 0,
-//            'title' => 'titanic',
-//            'enabled' => true,
-//            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-//            'type' => ConfigDefinition::TYPE_SPREADSHEET,
-//            'action' => ConfigDefinition::ACTION_UPDATE
-//        ];
-//
-//        $process = $this->runProcess($config);
-//
-//        var_dump($process->getOutput());
-//        var_dump($process->getErrorOutput());
-//
-//        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
-//
-//        $response = json_decode($process->getOutput(), true);
-//        $gdFile = $this->client->getSpreadsheet($response['fileId']);
-//
-//        var_dump($gdFile);
-//
-//        $this->assertArrayHasKey('spreadsheetId', $gdFile);
-//        $this->assertEquals('titanic', $gdFile['properties']['title']);
+        $this->prepareDataFiles();
+
+        // create spreadsheet
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+
+        $config = $this->prepareConfig();
+        $config['action'] = 'addSheet';
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic',
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'sheets' => [
+                [
+                    'title' => 'Sheet2',
+                    'enabled' => true,
+                    'action' => ConfigDefinition::ACTION_UPDATE
+                ]
+            ]
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $response = json_decode($process->getOutput(), true);
+        $this->assertArrayHasKey('replies', $response['sheet']);
+        $this->assertArrayHasKey('spreadsheetId', $response['sheet']);
+
+        $gdFile = $this->client->getSpreadsheet($response['sheet']['spreadsheetId']);
+        $this->assertCount(2, $gdFile['sheets']);
+        $this->assertEquals('Sheet2', $gdFile['sheets'][1]['properties']['title']);
     }
 
     public function testSyncActionDeleteSheet()
     {
+        $this->prepareDataFiles();
 
+        // create spreadsheet
+        $gdFile = $this->client->createFile(
+            $this->dataPath . '/in/tables/titanic_1.csv',
+            'titanic',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET
+            ]
+        );
+
+        // add sheet
+        $this->client->addSheet(
+            $gdFile['id'],
+            [
+                'properties' => [
+                    'title' => 'Sheet2'
+                ]
+            ]
+        );
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $sheet2Id = $gdSpreadsheet['sheets'][1]['properties']['sheetId'];
+
+        // delete sheet
+        $config = $this->prepareConfig();
+        $config['action'] = 'deleteSheet';
+        $config['parameters']['files'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic',
+            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'sheets' => [
+                [
+                    'sheetId' => $sheet2Id
+                ]
+            ]
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $response = json_decode($process->getOutput(), true);
+        $this->assertEquals('ok', $response['status']);
+
+        $gdSpreadsheet = $this->client->getSpreadsheet($gdFile['id']);
+        $this->assertCount(1, $gdSpreadsheet['sheets']);
     }
 
     /**
@@ -492,7 +540,8 @@ class FunctionalTest extends BaseTest
         return $process;
     }
 
-    private function prepareDataFiles() {
+    private function prepareDataFiles()
+    {
         $fs = new Filesystem();
         $fs->remove($this->tmpDataPath);
         $fs->mkdir($this->tmpDataPath);

@@ -140,7 +140,7 @@ class Application
 
         return [
             'status' => 'ok',
-            'spreadsheet' => $res
+            'sheet' => $res
         ];
     }
 
@@ -148,11 +148,10 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $res = $writer->createSpreadsheet($this->container['parameters']['files'][0]);
+        $writer->deleteSheet($this->container['parameters']['files'][0]);
 
         return [
-            'status' => 'ok',
-            'spreadsheet' => $res
+            'status' => 'ok'
         ];
     }
 

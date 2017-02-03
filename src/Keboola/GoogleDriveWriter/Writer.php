@@ -94,14 +94,21 @@ class Writer
 
     public function addSheet($spreadsheet)
     {
-        return $this->driveApi->addSheet($spreadsheet['fileId'], $spreadsheet['sheets'][0]);
+        return $this->driveApi->addSheet(
+            $spreadsheet['fileId'],
+            [
+                'properties' => [
+                    'title' => $spreadsheet['sheets'][0]['title']
+                ]
+            ]
+        );
     }
 
     public function deleteSheet($spreadsheet)
     {
         return $this->driveApi->deleteSheet(
             $spreadsheet['fileId'],
-            $spreadsheet['sheets'][0]['properties']['sheetId']
+            $spreadsheet['sheets'][0]['sheetId']
         );
     }
 }
