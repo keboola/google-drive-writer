@@ -32,9 +32,8 @@ class File
             return $this->update($file);
         } elseif ($file['action'] == 'create') {
             return $this->create($file);
-        } else {
-            throw new ApplicationException(sprintf("Action '%s' not allowed", $file['action']));
         }
+        throw new ApplicationException(sprintf("Action '%s' not allowed", $file['action']));
     }
 
     private function create($file)

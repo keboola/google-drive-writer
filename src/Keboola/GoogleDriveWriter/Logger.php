@@ -20,17 +20,10 @@ class Logger extends \Monolog\Logger
     {
         $options = getopt("", ['debug']);
         if (isset($options['debug'])) {
-            // Default format with all the info for dev debug
-            $formatter = new LineFormatter();
             $this->debug = true;
-        } elseif ($this->debug) {
-            // Set user debug mode
-            $formatter = new LineFormatter("%level_name%: %message% %context% %extra%\n");
-        } else {
-            // Simple message
-            $formatter = new LineFormatter("%message%\n");
         }
 
+        $formatter = $this->getFormatter();
         $errHandler = new StreamHandler('php://stderr', \Monolog\Logger::NOTICE, false);
         $level = $this->debug ? \Monolog\Logger::DEBUG : \Monolog\Logger::INFO;
         $handler = new StreamHandler('php://stdout', $level);
@@ -42,5 +35,14 @@ class Logger extends \Monolog\Logger
     public function setDebug($bool)
     {
         $this->debug = $bool;
+    }
+
+    private function getFormatter()
+    {
+        if ($this->debug) {
+            return new LineFormatter();
+        }
+
+        return new LineFormatter("%message%\n");
     }
 }
