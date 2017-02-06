@@ -14,14 +14,16 @@ use Monolog\Handler\StreamHandler;
 
 class Logger extends \Monolog\Logger
 {
-    public function __construct($name = '', $debug = false)
+    private $debug = false;
+
+    public function __construct($name = '')
     {
         $options = getopt("", ['debug']);
         if (isset($options['debug'])) {
             // Default format with all the info for dev debug
             $formatter = new LineFormatter();
-            $debug = true;
-        } elseif (!empty($debug)) {
+            $this->debug = true;
+        } elseif ($this->debug) {
             // Set user debug mode
             $formatter = new LineFormatter("%level_name%: %message% %context% %extra%\n");
         } else {
@@ -30,10 +32,15 @@ class Logger extends \Monolog\Logger
         }
 
         $errHandler = new StreamHandler('php://stderr', \Monolog\Logger::NOTICE, false);
-        $level = $debug ? \Monolog\Logger::DEBUG : \Monolog\Logger::INFO;
+        $level = $this->debug ? \Monolog\Logger::DEBUG : \Monolog\Logger::INFO;
         $handler = new StreamHandler('php://stdout', $level);
         $handler->setFormatter($formatter);
 
         parent::__construct($name, [$errHandler, $handler]);
+    }
+
+    public function setDebug($bool)
+    {
+        $this->debug = $bool;
     }
 }

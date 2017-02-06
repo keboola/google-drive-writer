@@ -10,6 +10,7 @@ namespace Keboola\GoogleDriveWriter\Writer;
 
 use GuzzleHttp\Exception\ClientException;
 use Keboola\GoogleDriveWriter\Application;
+use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
@@ -40,13 +41,7 @@ class Spreadsheet
 
         try {
             foreach ($spreadsheet['sheets'] as $sheet) {
-                if ($sheet['action'] == 'update') {
-                    $this->updateSheetValues($spreadsheet['fileId'], $sheet);
-                } elseif ($sheet['action'] == 'append') {
-                    $this->appendSheetValues($spreadsheet['fileId'], $sheet);
-                } else {
-                    throw new ApplicationException(sprintf("Action '%s' not allowed", $sheet['action']));
-                }
+                $this->uploadSheetValues($spreadsheet['fileId'], $sheet);
             }
         } catch (ClientException $e) {
             //@todo handle API exception
@@ -95,7 +90,7 @@ class Spreadsheet
         }
     }
 
-    private function updateSheetValues($spreadsheetId, $sheet)
+    private function uploadSheetValues($spreadsheetId, $sheet)
     {
         $csvFile = $this->input->getInputCsv($sheet['tableId']);
         $columnCount = $csvFile->getColumnsCount();
@@ -108,11 +103,14 @@ class Spreadsheet
         ]);
 
         // clear values
-        $this->client->clearSpreadsheetValues($spreadsheetId, urlencode($sheet['title']));
+        if ($sheet['action'] === ConfigDefinition::ACTION_UPDATE) {
+            $this->client->clearSpreadsheetValues($spreadsheetId, urlencode($sheet['title']));
+        }
 
         // insert new values
         $offset = 1;
         $limit = 1000;
+        $responses = [];
         while ($csvFile->current()) {
             $i = 0;
             $values = [];
@@ -122,48 +120,30 @@ class Spreadsheet
                 $i++;
             }
 
-            $responses[] = $this->client->updateSpreadsheetValues(
-                $spreadsheetId,
-                $this->getRange($sheet['title'], $columnCount, $offset, $limit),
-                $values
-            );
-
-            $offset = $offset + $i;
-        }
-    }
-
-    private function appendSheetValues($spreadsheetId, $sheet)
-    {
-        $csvFile = $this->input->getInputCsv($sheet['tableId']);
-        $columnCount = $csvFile->getColumnsCount();
-        $rowCount = $this->input->countLines($csvFile);
-
-        // update sheets metadata (title, rows and cols count) first
-        $this->updateSheetMetadata($spreadsheetId, $sheet, [
-            'rowCount' => $rowCount,
-            'columnCount' => $columnCount
-        ]);
-
-        // insert new values
-        $offset = 1;
-        $limit = 1000;
-        while ($csvFile->current()) {
-            $i = 0;
-            $values = [];
-            while ($i < $limit && $csvFile->current()) {
-                $values[] = $csvFile->current();
-                $csvFile->next();
-                $i++;
+            switch ($sheet['action']) {
+                case ConfigDefinition::ACTION_UPDATE:
+                    $responses[] = $this->client->updateSpreadsheetValues(
+                        $spreadsheetId,
+                        $this->getRange($sheet['title'], $columnCount, $offset, $limit),
+                        $values
+                    );
+                    break;
+                case ConfigDefinition::ACTION_APPEND:
+                    $responses[] = $this->client->appendSpreadsheetValues(
+                        $spreadsheetId,
+                        urlencode($sheet['title']),
+                        $values
+                    );
+                    break;
+                default:
+                    throw new ApplicationException(sprintf("Action '%s' not allowed", $sheet['action']));
+                    break;
             }
 
-            $responses[] = $this->client->appendSpreadsheetValues(
-                $spreadsheetId,
-                urlencode($sheet['title']),
-                $values
-            );
-
             $offset = $offset + $i;
         }
+
+        return $responses;
     }
 
     /**

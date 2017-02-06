@@ -32,7 +32,7 @@ class Writer
 
         $this->driveApi->getApi()->setBackoffsCount(7);
         $this->driveApi->getApi()->setBackoffCallback403($this->getBackoffCallback403());
-        $this->driveApi->getApi()->setRefreshTokenCallback(function ($accessToken, $refreshToken) {
+        $this->driveApi->getApi()->setRefreshTokenCallback(function () {
         });
     }
 

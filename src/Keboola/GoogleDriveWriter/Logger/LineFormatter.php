@@ -10,8 +10,7 @@ class LineFormatter extends \Monolog\Formatter\LineFormatter
     {
         if ($data instanceof CsvFile) {
             return "csv file: " . $data->getFilename();
-        } else {
-            return parent::normalize($data);
         }
+        return parent::normalize($data);
     }
 }

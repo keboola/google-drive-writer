@@ -39,14 +39,14 @@ class Client
     }
 
     /**
-     * @param $id
+     * @param $fileId
      * @param array $fields
      * @return mixed
      * @throws \Keboola\Google\ClientBundle\Exception\RestApiException
      */
-    public function getFile($id, $fields = [])
+    public function getFile($fileId, $fields = [])
     {
-        $uri = self::DRIVE_FILES . '/' . $id;
+        $uri = self::DRIVE_FILES . '/' . $fileId;
         if (!empty($fields)) {
             $uri .= sprintf('?fields=%s', implode(',', $fields));
         }
@@ -125,16 +125,16 @@ class Client
     }
 
     /**
-     * @param $id
+     * @param $fileId
      * @param $pathname
      * @param $params
      * @return mixed
      * @throws \Keboola\Google\ClientBundle\Exception\RestApiException
      */
-    public function updateFile($id, $pathname, $params)
+    public function updateFile($fileId, $pathname, $params)
     {
         // update metadata
-        $responseJson = $this->updateFileMetadata($id, $params);
+        $responseJson = $this->updateFileMetadata($fileId, $params);
 
         $response = $this->api->request(
             sprintf('%s/%s?uploadType=media', self::DRIVE_UPLOAD, $responseJson['id']),
@@ -152,15 +152,15 @@ class Client
     }
 
     /**
-     * @param $id
+     * @param $fileId
      * @param array $body
      * @param array $params
      * @return mixed
      * @throws \Keboola\Google\ClientBundle\Exception\RestApiException
      */
-    public function updateFileMetadata($id, $body = [], $params = [])
+    public function updateFileMetadata($fileId, $body = [], $params = [])
     {
-        $uri = sprintf('%s/%s', self::DRIVE_FILES, $id);
+        $uri = sprintf('%s/%s', self::DRIVE_FILES, $fileId);
         if (!empty($params)) {
             $uri .= '?' . \GuzzleHttp\Psr7\build_query($params);
         }
@@ -180,31 +180,31 @@ class Client
     }
 
     /**
-     * @param $id
+     * @param $fileId
      * @return \GuzzleHttp\Psr7\Response
      * @throws \Keboola\Google\ClientBundle\Exception\RestApiException
      */
-    public function deleteFile($id)
+    public function deleteFile($fileId)
     {
         return $this->api->request(
-            sprintf('%s/%s', self::DRIVE_FILES, $id),
+            sprintf('%s/%s', self::DRIVE_FILES, $fileId),
             'DELETE'
         );
     }
 
     /**
-     * @param $id
+     * @param $fileId
      * @param string $mimeType
      * @return \GuzzleHttp\Psr7\Response
      * @throws \Keboola\Google\ClientBundle\Exception\RestApiException
      */
-    public function exportFile($id, $mimeType = 'text/csv')
+    public function exportFile($fileId, $mimeType = 'text/csv')
     {
         return $this->api->request(
             sprintf(
                 '%s/%s/export?mimeType=%s',
                 self::DRIVE_FILES,
-                $id,
+                $fileId,
                 $mimeType
             )
         );
