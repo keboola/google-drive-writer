@@ -37,7 +37,6 @@ class Spreadsheet
 
         // sync metadata
         $this->syncFileMetadata($spreadsheet, $gdFile);
-        $this->syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet);
 
         try {
             foreach ($spreadsheet['sheets'] as $sheet) {
@@ -211,57 +210,6 @@ class Spreadsheet
 
         if (!empty($body) || !empty($params)) {
             $this->client->updateFileMetadata($gdFile['id'], $body, $params);
-        }
-    }
-
-    /**
-     * Add or Remove sheets
-     *
-     * @param $spreadsheet
-     * @param $gdSpreadsheet
-     */
-    private function syncSpreadsheetMetadata($spreadsheet, $gdSpreadsheet)
-    {
-        $sheetsInGD = array_map(function ($sheet) {
-            return $sheet['properties']['sheetId'];
-        }, $gdSpreadsheet['sheets']);
-
-        $sheetsInConfig = array_map(function ($sheet) {
-            return $sheet['sheetId'];
-        }, $spreadsheet['sheets']);
-
-        $sheetsToAdd = array_filter($spreadsheet['sheets'], function ($sheet) use ($sheetsInGD) {
-            return !in_array($sheet['sheetId'], $sheetsInGD);
-        });
-
-        $sheetsToRemove = array_filter($gdSpreadsheet['sheets'], function ($sheet) use ($sheetsInConfig) {
-            return !in_array($sheet['properties']['sheetId'], $sheetsInConfig);
-        });
-
-        $requests = [];
-        foreach ($sheetsToAdd as $sheet) {
-            $requests[] = [
-                'addSheet' => [
-                    'properties' => [
-                        'sheetId' => $sheet['sheetId'],
-                        'title' => $sheet['title'],
-                    ]
-                ]
-            ];
-        }
-
-        foreach ($sheetsToRemove as $sheet) {
-            $requests[] = [
-                'deleteSheet' => [
-                    'sheetId' => $sheet['properties']['sheetId']
-                ]
-            ];
-        }
-
-        if (!empty($requests)) {
-            $this->client->batchUpdateSpreadsheet($gdSpreadsheet['spreadsheetId'], [
-                'requests' => $requests
-            ]);
         }
     }
 
