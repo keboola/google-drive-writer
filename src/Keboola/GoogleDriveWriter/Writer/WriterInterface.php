@@ -10,5 +10,5 @@ namespace Keboola\GoogleDriveWriter\Writer;
 
 interface WriterInterface
 {
-    public function process($file);
+    public function process($table);
 }

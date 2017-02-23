@@ -36,7 +36,7 @@ class FunctionalTest extends BaseTest
         $this->prepareDataFiles();
 
         $config = $this->prepareConfig();
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => '',
             'title' => 'titanic',
@@ -75,7 +75,7 @@ class FunctionalTest extends BaseTest
 
         // update file
         $config = $this->prepareConfig();
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic_2',
@@ -117,19 +117,17 @@ class FunctionalTest extends BaseTest
 
         // update sheet
         $config = $this->prepareConfig();
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'sheets' => [[
-                'sheetId' => $sheetId,
-                'title' => 'casualties',
-                'tableId' => 'titanic_2',
-                'action' => ConfigDefinition::ACTION_UPDATE,
-                'enabled' => true
-            ]]
+            'type' => ConfigDefinition::SHEET,
+            'sheetId' => $sheetId,
+            'sheetTitle' => 'casualties',
+            'tableId' => 'titanic_2',
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'enabled' => true
         ];
 
         $process = $this->runProcess($config);
@@ -176,19 +174,17 @@ class FunctionalTest extends BaseTest
         // update sheet
         $newSheetTitle = 'Long John Silver';
         $config = $this->prepareConfig();
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'pirates',
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'sheets' => [[
-                'sheetId' => $sheetId,
-                'title' => $newSheetTitle,
-                'tableId' => 'large',
-                'action' => ConfigDefinition::ACTION_UPDATE,
-                'enabled' => true
-            ]]
+            'type' => ConfigDefinition::SHEET,
+            'sheetId' => $sheetId,
+            'sheetTitle' => $newSheetTitle,
+            'tableId' => 'large',
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'enabled' => true
         ];
 
         $process = $this->runProcess($config);
@@ -232,22 +228,17 @@ class FunctionalTest extends BaseTest
 
         // append other data do the sheet
         $config = $this->prepareConfig();
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SPREADSHEET,
-
-            'sheets' => [
-                [
-                    'sheetId' => $sheetId,
-                    'title' => 'casualties',
-                    'tableId' => 'titanic_2_headerless',
-                    'action' => ConfigDefinition::ACTION_APPEND,
-                    'enabled' => true
-                ]
-            ]
+            'type' => ConfigDefinition::SHEET,
+            'sheetId' => $sheetId,
+            'sheetTitle' => 'casualties',
+            'tableId' => 'titanic_2_headerless',
+            'action' => ConfigDefinition::ACTION_APPEND,
+            'enabled' => true
         ];
 
         $process = $this->runProcess($config);
@@ -266,7 +257,7 @@ class FunctionalTest extends BaseTest
 
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'title' => 'titanic',
             'enabled' => true,
@@ -292,12 +283,12 @@ class FunctionalTest extends BaseTest
 
         $config = $this->prepareConfig();
         $config['action'] = 'createSpreadsheet';
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'title' => 'titanic',
             'enabled' => true,
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SPREADSHEET,
+            'type' => ConfigDefinition::SHEET,
             'action' => ConfigDefinition::ACTION_UPDATE
         ];
 
@@ -328,19 +319,15 @@ class FunctionalTest extends BaseTest
 
         $config = $this->prepareConfig();
         $config['action'] = 'addSheet';
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'sheets' => [
-                [
-                    'title' => 'Sheet2',
-                    'enabled' => true,
-                    'action' => ConfigDefinition::ACTION_UPDATE
-                ]
-            ]
+            'type' => ConfigDefinition::SHEET,
+            'sheetTitle' => 'Sheet2',
+            'enabled' => true,
+            'action' => ConfigDefinition::ACTION_UPDATE
         ];
 
         $process = $this->runProcess($config);
@@ -384,17 +371,13 @@ class FunctionalTest extends BaseTest
         // delete sheet
         $config = $this->prepareConfig();
         $config['action'] = 'deleteSheet';
-        $config['parameters']['files'][] = [
+        $config['parameters']['tables'][] = [
             'id' => 0,
             'fileId' => $gdFile['id'],
             'title' => 'titanic',
             'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_SPREADSHEET,
-            'sheets' => [
-                [
-                    'sheetId' => $sheet2Id
-                ]
-            ]
+            'type' => ConfigDefinition::SHEET,
+            'sheetId' => $sheet2Id
         ];
 
         $process = $this->runProcess($config);

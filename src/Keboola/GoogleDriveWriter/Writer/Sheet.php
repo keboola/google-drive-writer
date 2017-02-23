@@ -9,14 +9,13 @@
 namespace Keboola\GoogleDriveWriter\Writer;
 
 use GuzzleHttp\Exception\ClientException;
-use Keboola\GoogleDriveWriter\Application;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Keboola\GoogleDriveWriter\Input;
 
-class Spreadsheet
+class Sheet
 {
     /** @var Client */
     private $client;
@@ -30,19 +29,17 @@ class Spreadsheet
         $this->input = $input;
     }
 
-    public function process($spreadsheet)
+    public function process($sheet)
     {
-        // get metadata from Google Drive (file and spreadsheet)
-        $gdSpreadsheet = $this->getCreateSpreadsheet($spreadsheet);
-        $gdFile = $this->client->getFile($spreadsheet['fileId'], ['id', 'name', 'parents']);
+        // get metadata from Google Drive file
+        $gdFile = $this->getFile($sheet);
 
         // sync metadata
-        $this->syncFileMetadata($spreadsheet, $gdFile);
+        $this->syncFileMetadata($sheet, $gdFile);
 
+        // upload data
         try {
-            foreach ($spreadsheet['sheets'] as $sheet) {
-                $this->uploadSheetValues($spreadsheet['fileId'], $sheet);
-            }
+            $this->uploadSheetValues($sheet['fileId'], $sheet);
         } catch (ClientException $e) {
             //@todo handle API exception
             throw new UserException($e->getMessage(), 0, $e, [
@@ -62,31 +59,25 @@ class Spreadsheet
     private function getRange($sheetTitle, $columnCount, $rowOffset = 1, $rowLimit = 1000)
     {
         $lastColumn = $this->getColumnA1($columnCount-1);
-
         $start = 'A' . $rowOffset;
         $end = $lastColumn . ($rowOffset + $rowLimit - 1);
 
         return urlencode($sheetTitle) . '!' . $start . ':' . $end;
     }
 
-    private function getCreateSpreadsheet($spreadsheet)
+    private function getFile($sheet)
     {
         try {
-            return $this->client->getSpreadsheet($spreadsheet['fileId']);
+            return $this->client->getFile($sheet['fileId'], ['id', 'name', 'parents']);
         } catch (ClientException $e) {
-            if ($e->getResponse()->getStatusCode() !== 404) {
-                throw $e;
+            if ($e->getResponse()->getStatusCode() == 404) {
+                throw new UserException(sprintf(
+                    'File %s (%s) not found',
+                    $sheet['title'],
+                    $sheet['fileId']
+                ));
             }
-            // file doesn't exist
-            $gdFile = $this->client->createFile(
-                $this->input->getInputTablePath($spreadsheet['tableId']),
-                $spreadsheet['title'],
-                [
-                    'parents' => $spreadsheet['parents'],
-                    'mimeType' => Client::MIME_TYPE_SPREADSHEET
-                ]
-            );
-            return $this->client->getSpreadsheet($gdFile['id']);
+            throw $e;
         }
     }
 
@@ -104,7 +95,7 @@ class Spreadsheet
 
         // clear values
         if ($sheet['action'] === ConfigDefinition::ACTION_UPDATE) {
-            $this->client->clearSpreadsheetValues($spreadsheetId, urlencode($sheet['title']));
+            $this->client->clearSpreadsheetValues($spreadsheetId, urlencode($sheet['sheetTitle']));
         }
 
         // insert new values
@@ -124,14 +115,14 @@ class Spreadsheet
                 case ConfigDefinition::ACTION_UPDATE:
                     $responses[] = $this->client->updateSpreadsheetValues(
                         $spreadsheetId,
-                        $this->getRange($sheet['title'], $columnCount, $offset, $limit),
+                        $this->getRange($sheet['sheetTitle'], $columnCount, $offset, $limit),
                         $values
                     );
                     break;
                 case ConfigDefinition::ACTION_APPEND:
                     $responses[] = $this->client->appendSpreadsheetValues(
                         $spreadsheetId,
-                        urlencode($sheet['title']),
+                        urlencode($sheet['sheetTitle']),
                         $values
                     );
                     break;
@@ -211,7 +202,7 @@ class Spreadsheet
             'updateSheetProperties' => [
                 'properties' => [
                     'sheetId' => $sheet['sheetId'],
-                    'title' => $sheet['title'],
+                    'title' => $sheet['sheetTitle'],
                     'gridProperties' => $gridProperties
                 ],
                 'fields' => 'title,gridProperties'

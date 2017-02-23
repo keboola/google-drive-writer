@@ -78,7 +78,7 @@ class Writer
         $params = [
             'parents' => $file['parents']
         ];
-        if ($file['type'] == ConfigDefinition::TYPE_SPREADSHEET) {
+        if ($file['type'] == ConfigDefinition::SHEET) {
             $params['mimeType'] = Client::MIME_TYPE_SPREADSHEET;
         }
 
@@ -92,23 +92,23 @@ class Writer
         return $this->driveApi->getSpreadsheet($gdFile['id']);
     }
 
-    public function addSheet($spreadsheet)
+    public function addSheet($sheet)
     {
         return $this->driveApi->addSheet(
-            $spreadsheet['fileId'],
+            $sheet['fileId'],
             [
                 'properties' => [
-                    'title' => $spreadsheet['sheets'][0]['title']
+                    'title' => $sheet['sheetTitle']
                 ]
             ]
         );
     }
 
-    public function deleteSheet($spreadsheet)
+    public function deleteSheet($sheet)
     {
         return $this->driveApi->deleteSheet(
-            $spreadsheet['fileId'],
-            $spreadsheet['sheets'][0]['sheetId']
+            $sheet['fileId'],
+            $sheet['sheetId']
         );
     }
 }

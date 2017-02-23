@@ -14,7 +14,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 class ConfigDefinition implements ConfigurationInterface
 {
     const TYPE_FILE = 'file';
-    const TYPE_SPREADSHEET = 'spreadsheet';
+    const SHEET = 'sheet';
 
     const ACTION_CREATE = 'create';
     const ACTION_UPDATE = 'update';
@@ -36,7 +36,7 @@ class ConfigDefinition implements ConfigurationInterface
                     ->isRequired()
                     ->cannotBeEmpty()
                 ->end()
-                ->arrayNode('files')
+                ->arrayNode('tables')
                     ->isRequired()
                     ->prototype('array')
                         ->children()
@@ -53,38 +53,19 @@ class ConfigDefinition implements ConfigurationInterface
                                 ->prototype('scalar')->end()
                             ->end()
                             ->enumNode('type')
-                                ->values(['file', 'spreadsheet'])
+                                ->values(['file', 'sheet'])
                             ->end()
                             ->enumNode('action')
-                                // ->isRequired() @todo make required if type == 'file'
-                                ->values(['create', 'update'])
+                                ->values(['create', 'update', 'append'])
                             ->end()
                             ->scalarNode('tableId')
-                                // ->isRequired() @todo make required if type == 'file'
                             ->end()
                             ->booleanNode('enabled')
-                                // ->isRequired() @todo make required if type == 'file'
                                 ->defaultValue(true)
                             ->end()
-                            ->arrayNode('sheets')
-                                ->prototype('array')
-                                    ->children()
-                                        ->scalarNode('sheetId')
-                                            ->cannotBeEmpty()
-                                        ->end()
-                                        ->scalarNode('title')
-                                            ->cannotBeEmpty()
-                                        ->end()
-                                        ->enumNode('action')
-                                            ->values(['update', 'append'])
-                                        ->end()
-                                        ->scalarNode('tableId')
-                                        ->end()
-                                        ->booleanNode('enabled')
-                                            ->defaultValue(true)
-                                        ->end()
-                                    ->end()
-                                ->end()
+                            ->scalarNode('sheetId')
+                            ->end()
+                            ->scalarNode('sheetTitle')
                             ->end()
                         ->end()
                     ->end()

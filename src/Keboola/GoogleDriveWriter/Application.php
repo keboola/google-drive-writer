@@ -101,7 +101,7 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $writer->process($this->container['parameters']['files']);
+        $writer->process($this->container['parameters']['tables']);
 
         return [
             'status' => 'ok'
@@ -112,7 +112,7 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $res = $writer->createFileMetadata($this->container['parameters']['files'][0]);
+        $res = $writer->createFileMetadata($this->container['parameters']['tables'][0]);
 
         return [
             'status' => 'ok',
@@ -124,7 +124,7 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $res = $writer->createSpreadsheet($this->container['parameters']['files'][0]);
+        $res = $writer->createSpreadsheet($this->container['parameters']['tables'][0]);
 
         return [
             'status' => 'ok',
@@ -136,7 +136,7 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $res = $writer->addSheet($this->container['parameters']['files'][0]);
+        $res = $writer->addSheet($this->container['parameters']['tables'][0]);
 
         return [
             'status' => 'ok',
@@ -148,7 +148,7 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $writer->deleteSheet($this->container['parameters']['files'][0]);
+        $writer->deleteSheet($this->container['parameters']['tables'][0]);
 
         return [
             'status' => 'ok'
