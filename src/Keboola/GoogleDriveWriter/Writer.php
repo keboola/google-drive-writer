@@ -9,14 +9,14 @@
 namespace Keboola\GoogleDriveWriter;
 
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
+use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\GoogleDrive\Client;
-use Keboola\GoogleDriveWriter\Writer\WriterInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class Writer
 {
     /** @var Client */
-    private $driveApi;
+    private $client;
 
     /** @var Input */
     private $input;
@@ -24,15 +24,15 @@ class Writer
     /** @var Logger */
     private $logger;
 
-    public function __construct(Client $driveApi, Input $input, Logger $logger)
+    public function __construct(Client $client, Input $input, Logger $logger)
     {
-        $this->driveApi = $driveApi;
+        $this->client = $client;
         $this->input = $input;
         $this->logger = $logger;
 
-        $this->driveApi->getApi()->setBackoffsCount(7);
-        $this->driveApi->getApi()->setBackoffCallback403($this->getBackoffCallback403());
-        $this->driveApi->getApi()->setRefreshTokenCallback(function () {
+        $this->client->getApi()->setBackoffsCount(7);
+        $this->client->getApi()->setBackoffCallback403($this->getBackoffCallback403());
+        $this->client->getApi()->setRefreshTokenCallback(function () {
         });
     }
 
@@ -53,48 +53,71 @@ class Writer
         };
     }
 
-    public function process(array $files)
+    public function process($file)
     {
-        foreach ($files as $file) {
-            $actionClassName = sprintf('%s\\%s\\%s', __NAMESPACE__, 'Writer', ucfirst($file['type']));
-
-            $this->logger->info(sprintf(
-                "Uploading file '%s'. ID: '%s'. Type: '%s'",
-                $file['title'],
-                $file['fileId'],
-                $file['type']
-            ));
-
-            /** @var WriterInterface $writer */
-            $writer = (new $actionClassName($this->driveApi, $this->input));
-            $writer->process($file);
-
-            $this->logger->info(sprintf("Upload successful"));
+        if ($file['action'] == 'update') {
+            return $this->update($file);
+        } elseif ($file['action'] == 'create') {
+            return $this->create($file);
         }
+        throw new ApplicationException(sprintf("Action '%s' not allowed", $file['action']));
+    }
+
+    private function create($file)
+    {
+        // create file
+        return $this->client->createFile(
+            $this->input->getInputTablePath($file['tableId']),
+            $file['title'] . ' (' . date('Y-m-d H:i:s') . ')',
+            ['parents' => $file['parents']]
+        );
+    }
+
+    private function update($file)
+    {
+        if ($this->client->fileExists($file['fileId'])) {
+            return $this->client->updateFile(
+                $file['fileId'],
+                $this->input->getInputTablePath($file['tableId']),
+                [
+                    'name' => $file['title'],
+                    'addParents' => $file['parents']
+                ]
+            );
+        }
+
+        return $this->client->createFile(
+            $this->input->getInputTablePath($file['tableId']),
+            $file['title'],
+            [
+                'id' => $file['fileId'],
+                'parents' => $file['parents']
+            ]
+        );
     }
 
     public function createFileMetadata(array $file)
     {
         $params = [
-            'parents' => $file['parents']
+            'parents' => [$file['folder']]
         ];
         if ($file['type'] == ConfigDefinition::SHEET) {
             $params['mimeType'] = Client::MIME_TYPE_SPREADSHEET;
         }
 
-        return $this->driveApi->createFileMetadata($file['title'], $params);
+        return $this->client->createFileMetadata($file['title'], $params);
     }
 
     public function createSpreadsheet(array $file)
     {
         $gdFile = $this->createFileMetadata($file);
 
-        return $this->driveApi->getSpreadsheet($gdFile['id']);
+        return $this->client->getSpreadsheet($gdFile['id']);
     }
 
     public function addSheet($sheet)
     {
-        return $this->driveApi->addSheet(
+        return $this->client->addSheet(
             $sheet['fileId'],
             [
                 'properties' => [
@@ -106,7 +129,7 @@ class Writer
 
     public function deleteSheet($sheet)
     {
-        return $this->driveApi->deleteSheet(
+        return $this->client->deleteSheet(
             $sheet['fileId'],
             $sheet['sheetId']
         );
