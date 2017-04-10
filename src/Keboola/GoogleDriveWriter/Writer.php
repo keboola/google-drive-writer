@@ -53,23 +53,29 @@ class Writer
         };
     }
 
-    public function process($file)
+    public function process($files)
     {
-        if ($file['action'] == 'update') {
+        return array_map(function ($file) {
+            $action = $file['action'];
+            if (!in_array($action, [ConfigDefinition::ACTION_CREATE, ConfigDefinition::ACTION_UPDATE])) {
+                throw new ApplicationException(sprintf(
+                    "Action '%s' not allowed. Allowed values are 'create' or 'update'",
+                    $action
+                ));
+            }
+            if ($action == ConfigDefinition::ACTION_CREATE) {
+                return $this->create($file);
+            }
             return $this->update($file);
-        } elseif ($file['action'] == 'create') {
-            return $this->create($file);
-        }
-        throw new ApplicationException(sprintf("Action '%s' not allowed", $file['action']));
+        }, $files);
     }
 
     private function create($file)
     {
-        // create file
         return $this->client->createFile(
             $this->input->getInputTablePath($file['tableId']),
             $file['title'] . ' (' . date('Y-m-d H:i:s') . ')',
-            ['parents' => $file['parents']]
+            ['parents' => [$file['folder']]]
         );
     }
 
@@ -81,7 +87,7 @@ class Writer
                 $this->input->getInputTablePath($file['tableId']),
                 [
                     'name' => $file['title'],
-                    'addParents' => $file['parents']
+                    'addParents' => [$file['folder']]
                 ]
             );
         }
@@ -91,47 +97,16 @@ class Writer
             $file['title'],
             [
                 'id' => $file['fileId'],
-                'parents' => $file['parents']
+                'parents' => [$file['folder']]
             ]
         );
     }
 
     public function createFileMetadata(array $file)
     {
-        $params = [
-            'parents' => [$file['folder']]
-        ];
-        if ($file['type'] == ConfigDefinition::SHEET) {
-            $params['mimeType'] = Client::MIME_TYPE_SPREADSHEET;
-        }
-
-        return $this->client->createFileMetadata($file['title'], $params);
-    }
-
-    public function createSpreadsheet(array $file)
-    {
-        $gdFile = $this->createFileMetadata($file);
-
-        return $this->client->getSpreadsheet($gdFile['id']);
-    }
-
-    public function addSheet($sheet)
-    {
-        return $this->client->addSheet(
-            $sheet['fileId'],
-            [
-                'properties' => [
-                    'title' => $sheet['sheetTitle']
-                ]
-            ]
-        );
-    }
-
-    public function deleteSheet($sheet)
-    {
-        return $this->client->deleteSheet(
-            $sheet['fileId'],
-            $sheet['sheetId']
+        return $this->client->createFileMetadata(
+            $file['title'],
+            ['parents' => [$file['folder']]]
         );
     }
 }

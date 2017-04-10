@@ -41,17 +41,15 @@ class FunctionalTest extends BaseTest
             'fileId' => '',
             'title' => 'titanic',
             'enabled' => true,
-            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_FILE,
+            'folder' => getenv('GOOGLE_DRIVE_FOLDER'),
             'action' => ConfigDefinition::ACTION_CREATE,
             'tableId' => 'titanic',
         ];
 
         $process = $this->runProcess($config);
-        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
-
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        
         $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
-
         $this->assertArrayHasKey('files', $gdFiles);
         $this->assertNotEmpty($gdFiles['files']);
         $this->assertCount(1, $gdFiles['files']);
@@ -80,14 +78,13 @@ class FunctionalTest extends BaseTest
             'fileId' => $gdFile['id'],
             'title' => 'titanic_2',
             'enabled' => true,
-            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_FILE,
+            'folder' => getenv('GOOGLE_DRIVE_FOLDER'),
             'action' => ConfigDefinition::ACTION_UPDATE,
             'tableId' => 'titanic_2'
         ];
 
         $process = $this->runProcess($config);
-        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
 
         $response = $this->client->getFile($gdFile['id']);
 
@@ -108,13 +105,12 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'title' => 'titanic',
             'enabled' => true,
-            'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-            'type' => ConfigDefinition::TYPE_FILE,
+            'folder' => getenv('GOOGLE_DRIVE_FOLDER'),
             'action' => ConfigDefinition::ACTION_UPDATE
         ];
 
         $process = $this->runProcess($config);
-        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
         $response = json_decode($process->getOutput(), true);
         $gdFile = $this->client->getFile($response['file']['id']);
         $this->assertArrayHasKey('id', $gdFile);
@@ -129,7 +125,7 @@ class FunctionalTest extends BaseTest
     {
         file_put_contents($this->tmpDataPath . '/config.json', json_encode($config));
 
-        $process = new Process(sprintf('php run.php --data=%s', $this->tmpDataPath));
+        $process = new Process(sprintf('php run.php --data=%s 2>&1', $this->tmpDataPath));
         $process->setTimeout(180);
         $process->run();
 
