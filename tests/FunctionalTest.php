@@ -48,7 +48,7 @@ class FunctionalTest extends BaseTest
 
         $process = $this->runProcess($config);
         $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
-        
+
         $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
         $this->assertArrayHasKey('files', $gdFiles);
         $this->assertNotEmpty($gdFiles['files']);

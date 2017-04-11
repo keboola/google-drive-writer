@@ -120,41 +120,6 @@ class Application
         ];
     }
 
-    protected function createSpreadsheetAction()
-    {
-        /** @var Writer $writer */
-        $writer = $this->container['writer'];
-        $res = $writer->createSpreadsheet($this->container['parameters']['tables'][0]);
-
-        return [
-            'status' => 'ok',
-            'spreadsheet' => $res
-        ];
-    }
-
-    protected function addSheetAction()
-    {
-        /** @var Writer $writer */
-        $writer = $this->container['writer'];
-        $res = $writer->addSheet($this->container['parameters']['tables'][0]);
-
-        return [
-            'status' => 'ok',
-            'sheet' => $res
-        ];
-    }
-
-    protected function deleteSheetAction()
-    {
-        /** @var Writer $writer */
-        $writer = $this->container['writer'];
-        $writer->deleteSheet($this->container['parameters']['tables'][0]);
-
-        return [
-            'status' => 'ok'
-        ];
-    }
-
     private function validateParameters($parameters)
     {
         try {
