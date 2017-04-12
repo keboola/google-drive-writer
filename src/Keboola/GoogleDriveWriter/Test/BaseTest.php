@@ -10,7 +10,7 @@ namespace Keboola\GoogleDriveWriter\Test;
 
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi;
-use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleSheetsClient\Client;
 
 class BaseTest extends \PHPUnit_Framework_TestCase
 {

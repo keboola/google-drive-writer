@@ -28,11 +28,4 @@ class Input
     {
         return new CsvFile($this->getInputTablePath($tableId));
     }
-
-    public function countLines(CsvFile $csvFile)
-    {
-        $cnt = iterator_count($csvFile);
-        $csvFile->rewind();
-        return $cnt;
-    }
 }

@@ -10,7 +10,7 @@ namespace Keboola\GoogleDriveWriter;
 
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
-use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleSheetsClient\Client;
 use Psr\Http\Message\ResponseInterface;
 
 class Writer

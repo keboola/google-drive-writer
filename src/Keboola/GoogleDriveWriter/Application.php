@@ -14,7 +14,7 @@ use Keboola\Google\ClientBundle\Google\RestApi;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
-use Keboola\GoogleDriveWriter\GoogleDrive\Client;
+use Keboola\GoogleSheetsClient\Client;
 use Monolog\Handler\NullHandler;
 use Pimple\Container;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;

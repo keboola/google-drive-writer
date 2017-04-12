@@ -7,10 +7,7 @@
  */
 namespace Keboola\GoogleDriveWriter\Tests;
 
-use GuzzleHttp\Exception\ClientException;
-use Keboola\Csv\CsvFile;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
-use Keboola\GoogleDriveWriter\GoogleDrive\Client;
 use Keboola\GoogleDriveWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
