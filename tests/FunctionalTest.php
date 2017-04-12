@@ -38,7 +38,30 @@ class FunctionalTest extends BaseTest
             'fileId' => '',
             'title' => 'titanic',
             'enabled' => true,
-            'folder' => getenv('GOOGLE_DRIVE_FOLDER'),
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+            'action' => ConfigDefinition::ACTION_CREATE,
+            'tableId' => 'titanic',
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
+        $this->assertArrayHasKey('files', $gdFiles);
+        $this->assertNotEmpty($gdFiles['files']);
+        $this->assertCount(1, $gdFiles['files']);
+    }
+
+    public function testCreateFileNoFolder()
+    {
+        $this->prepareDataFiles();
+
+        $config = $this->prepareConfig();
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'fileId' => '',
+            'title' => 'titanic',
+            'enabled' => true,
             'action' => ConfigDefinition::ACTION_CREATE,
             'tableId' => 'titanic',
         ];
@@ -75,7 +98,7 @@ class FunctionalTest extends BaseTest
             'fileId' => $gdFile['id'],
             'title' => 'titanic_2',
             'enabled' => true,
-            'folder' => getenv('GOOGLE_DRIVE_FOLDER'),
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE,
             'tableId' => 'titanic_2'
         ];
@@ -102,7 +125,7 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'title' => 'titanic',
             'enabled' => true,
-            'folder' => getenv('GOOGLE_DRIVE_FOLDER'),
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE
         ];
 
@@ -112,6 +135,28 @@ class FunctionalTest extends BaseTest
         $gdFile = $this->client->getFile($response['file']['id']);
         $this->assertArrayHasKey('id', $gdFile);
         $this->assertEquals('titanic', $gdFile['name']);
+    }
+
+    public function testSyncActionCreateFileNoFolder()
+    {
+        $this->prepareDataFiles();
+
+        $config = $this->prepareConfig();
+        $config['action'] = 'createFile';
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'title' => 'titanic',
+            'enabled' => true,
+            'action' => ConfigDefinition::ACTION_UPDATE
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $response = json_decode($process->getOutput(), true);
+        $gdFile = $this->client->getFile($response['file']['id'], ['kind', 'id', 'name', 'mimeType', 'parents']);
+        $this->assertArrayHasKey('id', $gdFile);
+        $this->assertEquals('titanic', $gdFile['name']);
+        $this->assertNotEquals(getenv('GOOGLE_DRIVE_FOLDER'), $gdFile['parents'][0]);
     }
 
     /**

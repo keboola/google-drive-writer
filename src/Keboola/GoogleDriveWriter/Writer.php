@@ -72,11 +72,8 @@ class Writer
 
     private function create($file)
     {
-        return $this->client->createFile(
-            $this->input->getInputTablePath($file['tableId']),
-            $file['title'] . ' (' . date('Y-m-d H:i:s') . ')',
-            ['parents' => [$file['folder']]]
-        );
+        $file['title'] = $file['title'] . ' (' . date('Y-m-d H:i:s') . ')';
+        return $this->createFile($file);
     }
 
     private function update($file)
@@ -87,26 +84,33 @@ class Writer
                 $this->input->getInputTablePath($file['tableId']),
                 [
                     'name' => $file['title'],
-                    'addParents' => [$file['folder']]
+                    'addParents' => [$file['folder']['id']]
                 ]
             );
         }
 
-        return $this->client->createFile(
-            $this->input->getInputTablePath($file['tableId']),
-            $file['title'],
-            [
-                'id' => $file['fileId'],
-                'parents' => [$file['folder']]
-            ]
-        );
+        return $this->createFile($file);
+    }
+
+    private function createFile($file)
+    {
+        $pathname = $this->input->getInputTablePath($file['tableId']);
+        $params = [
+            'id' => $file['fileId'],
+            'mimeType' => \GuzzleHttp\Psr7\mimetype_from_filename($pathname)
+        ];
+        if (isset($file['folder']['id'])) {
+            $params['parents'] = [$file['folder']['id']];
+        }
+        return $this->client->createFile($pathname, $file['title'], $params);
     }
 
     public function createFileMetadata(array $file)
     {
-        return $this->client->createFileMetadata(
-            $file['title'],
-            ['parents' => [$file['folder']]]
-        );
+        $params = [];
+        if (isset($file['folder']['id'])) {
+            $params['parents'] = [$file['folder']['id']];
+        }
+        return $this->client->createFileMetadata($file['title'], $params);
     }
 }
