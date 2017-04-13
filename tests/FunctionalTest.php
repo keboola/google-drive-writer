@@ -153,10 +153,16 @@ class FunctionalTest extends BaseTest
         $process = $this->runProcess($config);
         $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
         $response = json_decode($process->getOutput(), true);
-        $gdFile = $this->client->getFile($response['file']['id'], ['kind', 'id', 'name', 'mimeType', 'parents']);
+
+        $expectedFields = ['kind', 'id', 'name', 'mimeType', 'folder'];
+        foreach ($expectedFields as $field) {
+            $this->assertArrayHasKey($field, $response['file']);
+        }
+        $gdFile = $this->client->getFile($response['file']['id']);
         $this->assertArrayHasKey('id', $gdFile);
         $this->assertEquals('titanic', $gdFile['name']);
         $this->assertNotEquals(getenv('GOOGLE_DRIVE_FOLDER'), $gdFile['parents'][0]);
+        $this->assertEquals($response['file']['parents'][0], $gdFile['parents'][0]);
     }
 
     /**

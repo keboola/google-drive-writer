@@ -112,11 +112,12 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $res = $writer->createFileMetadata($this->container['parameters']['tables'][0]);
+        $writer->setNumberOfRetries(2);
+        $response = $writer->createFileMetadata($this->container['parameters']['tables'][0]);
 
         return [
             'status' => 'ok',
-            'file' => $res
+            'file' => $response
         ];
     }
 

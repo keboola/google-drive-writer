@@ -36,6 +36,11 @@ class Writer
         });
     }
 
+    public function setNumberOfRetries($cnt)
+    {
+        $this->client->getApi()->setBackoffsCount($cnt);
+    }
+
     public function getBackoffCallback403()
     {
         return function ($response) {
@@ -108,9 +113,31 @@ class Writer
     public function createFileMetadata(array $file)
     {
         $params = [];
+        $folder = [];
         if (isset($file['folder']['id'])) {
             $params['parents'] = [$file['folder']['id']];
+            $folder = $file['folder'];
         }
-        return $this->client->createFileMetadata($file['title'], $params);
+        $fileRes = $this->client->createFileMetadata($file['title'], $params);
+
+        if (empty($folder)) {
+            $folderRes = $this->getFile($fileRes['parents'][0]);
+            $folder = [
+                'id' => $folderRes['id'],
+                'title' => $folderRes['name']
+            ];
+        }
+        $fileRes['folder'] = $folder;
+
+        return $fileRes;
+    }
+
+    public function getFile($fileId, $fields = [])
+    {
+        $defaultFields = ['kind', 'id', 'name', 'mimeType', 'parents'];
+        if (empty($fields)) {
+            $fields = $defaultFields;
+        }
+        return $this->client->getFile($fileId, $fields);
     }
 }

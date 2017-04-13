@@ -261,16 +261,16 @@
         },
         {
             "name": "keboola/google-sheets-client",
-            "version": "1.0.1",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/google-sheets-client.git",
-                "reference": "3678f855a0801514441a6b57f642e4bd2f38b9bd"
+                "reference": "974e024a4ba9ae3c13819de0965a05ac406ee6b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/google-sheets-client/zipball/3678f855a0801514441a6b57f642e4bd2f38b9bd",
-                "reference": "3678f855a0801514441a6b57f642e4bd2f38b9bd",
+                "url": "https://api.github.com/repos/keboola/google-sheets-client/zipball/974e024a4ba9ae3c13819de0965a05ac406ee6b2",
+                "reference": "974e024a4ba9ae3c13819de0965a05ac406ee6b2",
                 "shasum": ""
             },
             "require": {
@@ -307,7 +307,7 @@
                 "keboola",
                 "sheets"
             ],
-            "time": "2017-03-10T11:12:35+00:00"
+            "time": "2017-04-12T12:49:20+00:00"
         },
         {
             "name": "keboola/php-temp",
