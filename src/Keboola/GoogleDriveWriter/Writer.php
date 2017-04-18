@@ -112,7 +112,10 @@ class Writer
 
     public function createFileMetadata(array $file)
     {
-        $params = [];
+        // writer can now only work with tables, so this is the only mimeType
+        $params = [
+            'mimeType' => $file['convert'] ? Client::MIME_TYPE_SPREADSHEET : 'text/csv'
+        ];
         $folder = [];
         if (isset($file['folder']['id'])) {
             $params['parents'] = [$file['folder']['id']];

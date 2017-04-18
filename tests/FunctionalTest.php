@@ -9,6 +9,7 @@ namespace Keboola\GoogleDriveWriter\Tests;
 
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Test\BaseTest;
+use Keboola\GoogleSheetsClient\Client;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
@@ -50,6 +51,7 @@ class FunctionalTest extends BaseTest
         $this->assertArrayHasKey('files', $gdFiles);
         $this->assertNotEmpty($gdFiles['files']);
         $this->assertCount(1, $gdFiles['files']);
+
     }
 
     public function testCreateFileNoFolder()
@@ -87,7 +89,8 @@ class FunctionalTest extends BaseTest
             $this->tmpDataPath . '/in/tables/titanic_1.csv',
             'titanic_1',
             [
-                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')]
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => 'text/csv'
             ]
         );
 
@@ -110,6 +113,7 @@ class FunctionalTest extends BaseTest
 
         $this->assertEquals($gdFile['id'], $response['id']);
         $this->assertEquals('titanic_2', $response['name']);
+        $this->assertEquals('text/csv', $response['mimeType']);
     }
 
     /**
@@ -135,6 +139,7 @@ class FunctionalTest extends BaseTest
         $gdFile = $this->client->getFile($response['file']['id']);
         $this->assertArrayHasKey('id', $gdFile);
         $this->assertEquals('titanic', $gdFile['name']);
+        $this->assertEquals('text/csv', $gdFile['mimeType']);
     }
 
     public function testSyncActionCreateFileNoFolder()
@@ -163,6 +168,31 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('titanic', $gdFile['name']);
         $this->assertNotEquals(getenv('GOOGLE_DRIVE_FOLDER'), $gdFile['parents'][0]);
         $this->assertEquals($response['file']['parents'][0], $gdFile['parents'][0]);
+        $this->assertEquals('text/csv', $gdFile['mimeType']);
+    }
+
+    public function testSyncActionCreateFileConvert()
+    {
+        $this->prepareDataFiles();
+
+        $config = $this->prepareConfig();
+        $config['action'] = 'createFile';
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'title' => 'titanic',
+            'enabled' => true,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'convert' => true
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $response = json_decode($process->getOutput(), true);
+        $gdFile = $this->client->getFile($response['file']['id']);
+        $this->assertArrayHasKey('id', $gdFile);
+        $this->assertEquals('titanic', $gdFile['name']);
+        $this->assertEquals(Client::MIME_TYPE_SPREADSHEET, $gdFile['mimeType']);
     }
 
     /**

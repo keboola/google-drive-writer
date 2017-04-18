@@ -261,16 +261,16 @@
         },
         {
             "name": "keboola/google-sheets-client",
-            "version": "1.1.1",
+            "version": "1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/google-sheets-client.git",
-                "reference": "974e024a4ba9ae3c13819de0965a05ac406ee6b2"
+                "reference": "a8946aa56317ca2c1ec2a0b7fb9b9a2235e1ba83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/google-sheets-client/zipball/974e024a4ba9ae3c13819de0965a05ac406ee6b2",
-                "reference": "974e024a4ba9ae3c13819de0965a05ac406ee6b2",
+                "url": "https://api.github.com/repos/keboola/google-sheets-client/zipball/a8946aa56317ca2c1ec2a0b7fb9b9a2235e1ba83",
+                "reference": "a8946aa56317ca2c1ec2a0b7fb9b9a2235e1ba83",
                 "shasum": ""
             },
             "require": {
@@ -307,7 +307,7 @@
                 "keboola",
                 "sheets"
             ],
-            "time": "2017-04-12T12:49:20+00:00"
+            "time": "2017-04-18T11:13:15+00:00"
         },
         {
             "name": "keboola/php-temp",
@@ -1000,16 +1000,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.6.0",
+            "version": "1.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "5a5a9fc8025a08d8919be87d6884d5a92520cefe"
+                "reference": "8e6e04167378abf1ddb4d3522d8755c5fd90d102"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/5a5a9fc8025a08d8919be87d6884d5a92520cefe",
-                "reference": "5a5a9fc8025a08d8919be87d6884d5a92520cefe",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/8e6e04167378abf1ddb4d3522d8755c5fd90d102",
+                "reference": "8e6e04167378abf1ddb4d3522d8755c5fd90d102",
                 "shasum": ""
             },
             "require": {
@@ -1038,7 +1038,7 @@
                 "object",
                 "object graph"
             ],
-            "time": "2017-01-26T22:05:40+00:00"
+            "time": "2017-04-12T18:52:22+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
