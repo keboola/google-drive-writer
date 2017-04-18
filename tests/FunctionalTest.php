@@ -51,7 +51,6 @@ class FunctionalTest extends BaseTest
         $this->assertArrayHasKey('files', $gdFiles);
         $this->assertNotEmpty($gdFiles['files']);
         $this->assertCount(1, $gdFiles['files']);
-
     }
 
     public function testCreateFileNoFolder()
