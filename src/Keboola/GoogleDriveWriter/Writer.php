@@ -84,13 +84,16 @@ class Writer
     private function update($file)
     {
         if ($this->client->fileExists($file['fileId'])) {
+            $params = [
+                'name' => $file['title']
+            ];
+            if (!empty($file['folder']['id'])) {
+                $params['addParents'] = [$file['folder']['id']];
+            }
             return $this->client->updateFile(
                 $file['fileId'],
                 $this->input->getInputTablePath($file['tableId']),
-                [
-                    'name' => $file['title'],
-                    'addParents' => [$file['folder']['id']]
-                ]
+                $params
             );
         }
 
