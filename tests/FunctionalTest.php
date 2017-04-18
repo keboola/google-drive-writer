@@ -36,7 +36,6 @@ class FunctionalTest extends BaseTest
         $config = $this->prepareConfig();
         $config['parameters']['tables'][] = [
             'id' => 0,
-            'fileId' => '',
             'title' => 'titanic',
             'enabled' => true,
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],

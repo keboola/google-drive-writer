@@ -104,9 +104,11 @@ class Writer
     {
         $pathname = $this->input->getInputTablePath($file['tableId']);
         $params = [
-            'id' => $file['fileId'],
             'mimeType' => \GuzzleHttp\Psr7\mimetype_from_filename($pathname)
         ];
+        if (isset($file['fileId'])) {
+            $params['id'] = $file['fileId'];
+        }
         if (isset($file['folder']['id'])) {
             $params['parents'] = [$file['folder']['id']];
         }
