@@ -154,8 +154,6 @@ class FunctionalTest extends BaseTest
      */
     public function testSyncActionCreateFile()
     {
-        $this->prepareDataFiles();
-
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
         $config['parameters']['tables'][] = [
@@ -177,8 +175,6 @@ class FunctionalTest extends BaseTest
 
     public function testSyncActionCreateFileNoFolder()
     {
-        $this->prepareDataFiles();
-
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
         $config['parameters']['tables'][] = [
@@ -206,8 +202,6 @@ class FunctionalTest extends BaseTest
 
     public function testSyncActionCreateFileConvert()
     {
-        $this->prepareDataFiles();
-
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
         $config['parameters']['tables'][] = [
@@ -226,6 +220,39 @@ class FunctionalTest extends BaseTest
         $this->assertArrayHasKey('id', $gdFile);
         $this->assertEquals('titanic', $gdFile['name']);
         $this->assertEquals(Client::MIME_TYPE_SPREADSHEET, $gdFile['mimeType']);
+    }
+
+    public function testSyncActionGetFolder()
+    {
+        $config = $this->prepareConfig();
+        $config['action'] = 'getFolder';
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $response = json_decode($process->getOutput(), true);
+
+        $this->assertEquals('application/vnd.google-apps.folder', $response['file']['mimeType']);
+        $this->assertEquals(getenv('GOOGLE_DRIVE_FOLDER'), $response['file']['id']);
+    }
+
+    public function testSyncActionGetFolderDefault()
+    {
+        $config = $this->prepareConfig();
+        $config['action'] = 'getFolder';
+        $config['parameters']['tables'][] = [
+            'id' => 0
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $response = json_decode($process->getOutput(), true);
+
+        $this->assertEquals('application/vnd.google-apps.folder', $response['file']['mimeType']);
+        $this->assertNotEquals(getenv('GOOGLE_DRIVE_FOLDER'), $response['file']['id']);
     }
 
     /**

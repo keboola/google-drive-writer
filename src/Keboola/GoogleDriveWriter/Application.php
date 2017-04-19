@@ -69,7 +69,7 @@ class Application
     {
         $actionMethod = $this->container['action'] . 'Action';
         if (!method_exists($this, $actionMethod)) {
-            throw new UserException(sprintf("Action '%s' does not exist.", $this['action']));
+            throw new UserException(sprintf("Action '%s' does not exist.", $this->container['action']));
         }
 
         try {
@@ -114,6 +114,24 @@ class Application
         $writer = $this->container['writer'];
         $writer->setNumberOfRetries(2);
         $response = $writer->createFileMetadata($this->container['parameters']['tables'][0]);
+
+        return [
+            'status' => 'ok',
+            'file' => $response
+        ];
+    }
+
+    protected function getFolderAction()
+    {
+        /** @var Writer $writer */
+        $writer = $this->container['writer'];
+        $writer->setNumberOfRetries(2);
+
+        $folderId = 'root';
+        if (!empty($this->container['parameters']['tables'][0]['folder']['id'])) {
+            $folderId = $this->container['parameters']['tables'][0]['folder']['id'];
+        }
+        $response = $writer->getFile($folderId);
 
         return [
             'status' => 'ok',
