@@ -31,7 +31,7 @@ class FunctionalTest extends BaseTest
      */
     public function testCreateFile()
     {
-        $this->prepareDataFiles();
+        $this->prepareDataTables();
 
         $config = $this->prepareConfig();
         $config['parameters']['tables'][] = [
@@ -54,7 +54,7 @@ class FunctionalTest extends BaseTest
 
     public function testCreateFileNoFolder()
     {
-        $this->prepareDataFiles();
+        $this->prepareDataTables();
 
         $config = $this->prepareConfig();
         $config['parameters']['tables'][] = [
@@ -80,7 +80,7 @@ class FunctionalTest extends BaseTest
      */
     public function testUpdateFile()
     {
-        $this->prepareDataFiles();
+        $this->prepareDataTables();
 
         // create file
         $gdFile = $this->client->createFile(
@@ -116,7 +116,7 @@ class FunctionalTest extends BaseTest
 
     public function testUpdateFileNoFolder()
     {
-        $this->prepareDataFiles();
+        $this->prepareDataTables();
 
         // create file
         $gdFile = $this->client->createFile(
@@ -256,6 +256,27 @@ class FunctionalTest extends BaseTest
     }
 
     /**
+     * Test processing files from FileUpload
+     */
+    public function testFileUpload()
+    {
+        $this->prepareDataFiles();
+
+        $config = $this->prepareConfig();
+        $config['parameters']['files'] = [
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $gdFiles = $this->client->listFiles("name contains 'wr-google-drive-64.png' and trashed != true");
+        $this->assertArrayHasKey('files', $gdFiles);
+        $this->assertNotEmpty($gdFiles['files']);
+        $this->assertCount(1, $gdFiles['files']);
+    }
+
+    /**
      * @param $config
      * @return Process
      */
@@ -270,7 +291,7 @@ class FunctionalTest extends BaseTest
         return $process;
     }
 
-    private function prepareDataFiles()
+    private function prepareDataTables()
     {
         $fs = new Filesystem();
         $fs->remove($this->tmpDataPath);
@@ -282,6 +303,22 @@ class FunctionalTest extends BaseTest
         $fs->copy(
             $this->dataPath . '/in/tables/titanic_2_headerless.csv',
             $this->tmpDataPath . '/in/tables/titanic_2_headerless.csv'
+        );
+    }
+
+    private function prepareDataFiles()
+    {
+        $fs = new Filesystem();
+        $fs->remove($this->tmpDataPath);
+        $fs->mkdir($this->tmpDataPath);
+        $fs->mkdir($this->tmpDataPath . '/in/files/');
+        $fs->copy(
+            $this->dataPath . '/in/files/wr-google-drive-64.png',
+            $this->tmpDataPath . '/in/files/wr-google-drive-64.png'
+        );
+        $fs->copy(
+            $this->dataPath . '/in/files/wr-google-drive-64.png.manifest',
+            $this->tmpDataPath . '/in/files/wr-google-drive-64.png.manifest'
         );
     }
 }

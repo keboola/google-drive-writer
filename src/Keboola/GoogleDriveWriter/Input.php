@@ -9,6 +9,7 @@
 namespace Keboola\GoogleDriveWriter;
 
 use Keboola\Csv\CsvFile;
+use Symfony\Component\Finder\Finder;
 
 class Input
 {
@@ -17,6 +18,18 @@ class Input
     public function __construct($dataDir)
     {
         $this->dataDir = $dataDir;
+    }
+
+    public function getInputFiles()
+    {
+        $finder = new Finder();
+        $finder->files()->notName('*.manifest');
+        return $finder->in(sprintf('%s/in/files', $this->dataDir));
+    }
+
+    public function getInputFilePath($inputFilename)
+    {
+        return sprintf('%s/in/files/%s', $this->dataDir, $inputFilename);
     }
 
     public function getInputTablePath($tableId)

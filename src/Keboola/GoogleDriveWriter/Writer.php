@@ -10,8 +10,11 @@ namespace Keboola\GoogleDriveWriter;
 
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
+use Keboola\GoogleDriveWriter\Exception\UserException;
 use Keboola\GoogleSheetsClient\Client;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 
 class Writer
 {
@@ -58,10 +61,34 @@ class Writer
         };
     }
 
-    public function process($files)
+    public function processFiles($filesConfig)
     {
-        return array_map(function ($file) {
-            $action = $file['action'];
+        /** @var Finder $finder */
+        $finder = $this->input->getInputFiles();
+        $results = [];
+
+        foreach ($finder as $fileInfo) {
+            $file = $filesConfig;
+            /** @var SplFileInfo $fileInfo */
+            $file['inputFile'] = $fileInfo->getFilename();
+            $file['title'] = $file['inputFile'];
+            $gdFiles = $this->client->listFiles(sprintf("trashed=false and name='%s'", $file['inputFile']));
+
+            if (!empty($gdFiles['files'])) {
+                $lastGdFile = array_shift($gdFiles['files']);
+                $file['fileId'] = $lastGdFile['id'];
+                $results[] = $this->update($file);
+                continue;
+            }
+
+            $results[] = $this->createFile($file);
+        }
+    }
+
+    public function processTables($tables)
+    {
+        return array_map(function ($table) {
+            $action = $table['action'];
             if (!in_array($action, [ConfigDefinition::ACTION_CREATE, ConfigDefinition::ACTION_UPDATE])) {
                 throw new ApplicationException(sprintf(
                     "Action '%s' not allowed. Allowed values are 'create' or 'update'",
@@ -69,10 +96,10 @@ class Writer
                 ));
             }
             if ($action == ConfigDefinition::ACTION_CREATE) {
-                return $this->create($file);
+                return $this->create($table);
             }
-            return $this->update($file);
-        }, $files);
+            return $this->update($table);
+        }, $tables);
     }
 
     private function create($file)
@@ -92,7 +119,7 @@ class Writer
             }
             return $this->client->updateFile(
                 $file['fileId'],
-                $this->input->getInputTablePath($file['tableId']),
+                $this->getInputFile($file),
                 $params
             );
         }
@@ -102,7 +129,7 @@ class Writer
 
     private function createFile($file)
     {
-        $pathname = $this->input->getInputTablePath($file['tableId']);
+        $pathname = $this->getInputFile($file);
         $params = [
             'mimeType' => \GuzzleHttp\Psr7\mimetype_from_filename($pathname)
         ];
@@ -147,5 +174,18 @@ class Writer
             $fields = $defaultFields;
         }
         return $this->client->getFile($fileId, $fields);
+    }
+
+    private function getInputFile($file)
+    {
+        if (!empty($file['inputFile'])) {
+            return $this->input->getInputFilePath($file['inputFile']);
+        }
+        if (!empty($file['tableId'])) {
+            return $this->input->getInputTablePath($file['tableId']);
+        }
+        throw new ApplicationException("No input file or table specified", 0, null, [
+            'file' => $file
+        ]);
     }
 }

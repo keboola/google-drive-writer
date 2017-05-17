@@ -101,7 +101,14 @@ class Application
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
-        $writer->process($this->container['parameters']['tables']);
+
+        if (!empty($this->container['parameters']['tables'])) {
+            $writer->processTables($this->container['parameters']['tables']);
+        }
+
+        if (!empty($this->container['parameters']['files'])) {
+            $writer->processFiles($this->container['parameters']['files']);
+        }
 
         return [
             'status' => 'ok'
