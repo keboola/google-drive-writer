@@ -117,6 +117,7 @@ class Writer
             if (!empty($file['folder']['id'])) {
                 $params['addParents'] = [$file['folder']['id']];
             }
+
             return $this->client->updateFile(
                 $file['fileId'],
                 $this->getInputFile($file),
