@@ -1,6 +1,5 @@
 # google-drive-writer
 
-[![Docker Repository on Quay](https://quay.io/repository/keboola/google-drive-writer/status "Docker Repository on Quay")](https://quay.io/repository/keboola/google-drive-writer)
 [![Build Status](https://travis-ci.org/keboola/google-drive-writer.svg?branch=master)](https://travis-ci.org/keboola/google-drive-writer)
 [![Code Climate](https://codeclimate.com/github/keboola/google-drive-writer/badges/gpa.svg)](https://codeclimate.com/github/keboola/google-drive-writer)
 [![Test Coverage](https://codeclimate.com/github/keboola/google-drive-writer/badges/coverage.svg)](https://codeclimate.com/github/keboola/google-drive-writer/coverage)
