@@ -61,6 +61,19 @@ class Writer
         };
     }
 
+    private function tryParseNameFromManifest($filePath)
+    {
+        $name = basename($filePath);
+        $manifestFile = $filePath . '.manifest';
+        if (file_exists($manifestFile)) {
+            $manifest = json_decode(file_get_contents($manifestFile), true);
+            if (!empty($manifest['name'])) {
+                $name = $manifest['name'];
+            }
+        }
+        return $name;
+    }
+
     public function processFiles($filesConfig)
     {
         /** @var Finder $finder */
@@ -71,7 +84,7 @@ class Writer
             $file = $filesConfig;
             /** @var SplFileInfo $fileInfo */
             $file['inputFile'] = $fileInfo->getFilename();
-            $file['title'] = $file['inputFile'];
+            $file['title'] = $this->tryParseNameFromManifest($fileInfo->getRealPath());
             $gdFiles = $this->client->listFiles(sprintf("trashed=false and name='%s'", $file['inputFile']));
 
             if (!empty($gdFiles['files'])) {
