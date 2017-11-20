@@ -147,11 +147,14 @@ class Writer
         $params = [
             'mimeType' => \GuzzleHttp\Psr7\mimetype_from_filename($pathname)
         ];
-        if (isset($file['fileId'])) {
+        if (!empty($file['fileId'])) {
             $params['id'] = $file['fileId'];
         }
         if (isset($file['folder']['id'])) {
             $params['parents'] = [$file['folder']['id']];
+        }
+        if (isset($file['convert']) && $file['convert']) {
+            $params['mimeType'] = Client::MIME_TYPE_SPREADSHEET;
         }
         return $this->client->createFile($pathname, $file['title'], $params);
     }

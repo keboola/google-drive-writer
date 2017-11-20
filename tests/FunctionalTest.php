@@ -67,12 +67,39 @@ class FunctionalTest extends BaseTest
         ];
 
         $process = $this->runProcess($config);
+
         $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
 
         $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
         $this->assertArrayHasKey('files', $gdFiles);
         $this->assertNotEmpty($gdFiles['files']);
         $this->assertCount(1, $gdFiles['files']);
+    }
+
+    public function testCreateFileConvert()
+    {
+        $this->prepareDataTables();
+
+        $config = $this->prepareConfig();
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'title' => 'titanic',
+            'enabled' => true,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+            'action' => ConfigDefinition::ACTION_CREATE,
+            'tableId' => 'titanic',
+            'convert' => true
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
+        $this->assertArrayHasKey('files', $gdFiles);
+        $this->assertNotEmpty($gdFiles['files']);
+        $this->assertCount(1, $gdFiles['files']);
+        $gdFile = $gdFiles['files'][0];
+        $this->assertEquals(Client::MIME_TYPE_SPREADSHEET, $gdFile['mimeType']);
     }
 
     /**
