@@ -141,6 +141,47 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('text/csv', $response['mimeType']);
     }
 
+    public function testUpdateDisabledFile()
+    {
+        $this->prepareDataTables();
+
+        // create file
+        $gdFile = $this->client->createFile(
+            $this->tmpDataPath . '/in/tables/titanic_1.csv',
+            'titanic_1',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
+                'mimeType' => 'text/csv'
+            ]
+        );
+
+        $modified = $this->client->getFile($gdFile['id'], ['modifiedTime']);
+
+        // update file
+        $config = $this->prepareConfig();
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic_2',
+            'enabled' => false,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'tableId' => 'titanic_2'
+        ];
+
+        sleep(5);
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $response = $this->client->getFile($gdFile['id'], ['id', 'name', 'mimeType', 'modifiedTime']);
+
+        $this->assertEquals($gdFile['id'], $response['id']);
+        $this->assertEquals('titanic_1', $response['name']);
+        $this->assertEquals('text/csv', $response['mimeType']);
+        $this->assertEquals($modified['modifiedTime'], $response['modifiedTime']);
+    }
+
     public function testUpdateFileConvert()
     {
         $this->prepareDataTables();

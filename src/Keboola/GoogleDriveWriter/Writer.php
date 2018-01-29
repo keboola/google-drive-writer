@@ -112,7 +112,9 @@ class Writer
                 return $this->create($table);
             }
             return $this->update($table);
-        }, $tables);
+        }, array_filter($tables, function ($table) {
+            return $table['enabled'];
+        }));
     }
 
     private function create($file)
