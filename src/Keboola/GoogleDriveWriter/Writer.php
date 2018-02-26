@@ -85,7 +85,7 @@ class Writer
             /** @var SplFileInfo $fileInfo */
             $file['inputFile'] = $fileInfo->getFilename();
             $file['title'] = $this->tryParseNameFromManifest($fileInfo->getRealPath());
-            $gdFiles = $this->client->listFiles(sprintf("trashed=false and name='%s'", $file['inputFile']));
+            $gdFiles = $this->client->listFiles(sprintf("trashed=false and name='%s'", $file['title']));
 
             if (!empty($gdFiles['files'])) {
                 $lastGdFile = array_shift($gdFiles['files']);
