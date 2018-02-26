@@ -379,6 +379,31 @@ class FunctionalTest extends BaseTest
         $this->assertArrayHasKey('files', $gdFiles);
         $this->assertNotEmpty($gdFiles['files']);
         $this->assertCount(1, $gdFiles['files']);
+
+        // test update
+        $gdFile = reset($gdFiles['files']);
+        $gdFile = $this->client->getFile($gdFile['id'], ['id', 'name', 'version']);
+        $this->assertArrayHasKey('version', $gdFile);
+        $this->assertArrayHasKey('id', $gdFile);
+
+        $oldVersion = $gdFile['version'];
+        $oldId = $gdFile['id'];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $gdFiles = $this->client->listFiles("name contains 'titanic-named-file.png' and trashed != true");
+        $this->assertArrayHasKey('files', $gdFiles);
+        $this->assertNotEmpty($gdFiles['files']);
+        $this->assertCount(1, $gdFiles['files']);
+
+        $gdFile = reset($gdFiles['files']);
+        $gdFile = $this->client->getFile($gdFile['id'], ['id', 'name', 'version']);
+        $this->assertArrayHasKey('version', $gdFile);
+        $this->assertArrayHasKey('id', $gdFile);
+
+        $this->assertEquals($oldId, $gdFile['id']);
+        $this->assertGreaterThan($oldVersion, $gdFile['version']);
     }
 
     /**
