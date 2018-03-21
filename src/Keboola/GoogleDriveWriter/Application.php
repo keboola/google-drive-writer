@@ -49,7 +49,9 @@ class Application
             );
         };
         $container['google_drive_client'] = function ($c) {
-            return new Client($c['google_client']);
+            $client = new Client($c['google_client']);
+            $client->setTeamDriveSupport(true);
+            return $client;
         };
         $container['input'] = function ($c) {
             return new Input($c['parameters']['data_dir']);

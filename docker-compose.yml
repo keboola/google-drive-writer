@@ -3,6 +3,8 @@ services:
   app:
     build: .
     image: keboola/google-drive-writer
+    volumes:
+      - .:/code
     tty: true
     stdin_open: true
     command: ./phpunit.sh
@@ -12,4 +14,5 @@ services:
       ACCESS_TOKEN: $ACCESS_TOKEN
       REFRESH_TOKEN: $REFRESH_TOKEN
       GOOGLE_DRIVE_FOLDER: $GOOGLE_DRIVE_FOLDER
+      GOOGLE_DRIVE_TEAM_FOLDER: $GOOGLE_DRIVE_TEAM_FOLDER
       CODECLIMATE_REPO_TOKEN: $CODECLIMATE_REPO_TOKEN

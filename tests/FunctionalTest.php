@@ -141,6 +141,42 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('text/csv', $response['mimeType']);
     }
 
+    public function testUpdateTeamFile()
+    {
+        $this->prepareDataTables();
+
+        // create file
+        $gdFile = $this->client->createFile(
+            $this->tmpDataPath . '/in/tables/titanic_1.csv',
+            'titanic_1',
+            [
+                'parents' => [getenv('GOOGLE_DRIVE_TEAM_FOLDER')],
+                'mimeType' => 'text/csv'
+            ]
+        );
+
+        // update file
+        $config = $this->prepareConfig();
+        $config['parameters']['tables'][] = [
+            'id' => 0,
+            'fileId' => $gdFile['id'],
+            'title' => 'titanic_2',
+            'enabled' => true,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_TEAM_FOLDER')],
+            'action' => ConfigDefinition::ACTION_UPDATE,
+            'tableId' => 'titanic_2'
+        ];
+
+        $process = $this->runProcess($config);
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+
+        $response = $this->client->getFile($gdFile['id']);
+
+        $this->assertEquals($gdFile['id'], $response['id']);
+        $this->assertEquals('titanic_2', $response['name']);
+        $this->assertEquals('text/csv', $response['mimeType']);
+    }
+
     public function testUpdateDisabledFile()
     {
         $this->prepareDataTables();
