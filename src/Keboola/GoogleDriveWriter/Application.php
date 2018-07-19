@@ -78,20 +78,32 @@ class Application
             return $this->$actionMethod();
         } catch (RequestException $e) {
             if ($e->getCode() == 401) {
-                throw new UserException("Expired or wrong credentials, please reauthorize.", $e->getCode(), $e);
+                throw new UserException('Expired or wrong credentials, please reauthorize.', $e->getCode(), $e);
             }
             if ($e->getCode() == 403) {
                 if (strtolower($e->getResponse()->getReasonPhrase()) == 'forbidden') {
-                    $this->container['logger']->warning("You don't have access to Google Drive resource.");
-                    return [];
+                    $this->container['logger']->warning(
+                        sprintf(
+                            'You don\'t have access to Google Drive resource "%s"',
+                            $e->getRequest()->getUri()
+                        ),
+                        [
+                            'uri' => $e->getRequest()->getUri(),
+                            'statusCode' => $e->getResponse()->getStatusCode(),
+                            'message' => $e->getMessage(),
+                            'exception' => $e
+                        ]
+                    );
+
+                    return ['status' => 'warning'];
                 }
-                throw new UserException("Reason: " . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e);
+                throw new UserException('Reason: ' . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e);
             }
             if ($e->getCode() == 400) {
                 throw new UserException($e->getMessage());
             }
             if ($e->getCode() >= 500 && $e->getCode() < 600) {
-                throw new UserException("Google API error: " . $e->getMessage(), $e->getCode(), $e);
+                throw new UserException('Google API error: ' . $e->getMessage(), $e->getCode(), $e);
             }
             throw new ApplicationException($e->getMessage(), 500, $e, [
                 'response' => $e->getResponse()->getBody()->getContents()
