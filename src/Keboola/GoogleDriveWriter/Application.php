@@ -82,14 +82,20 @@ class Application
             }
             if ($e->getCode() == 403) {
                 if (strtolower($e->getResponse()->getReasonPhrase()) == 'forbidden') {
-                    $this->container['logger']->error('User does not have permissions to resource', [
-                        'uri' => $e->getRequest()->getUri(),
-                        'statusCode' => $e->getResponse()->getStatusCode(),
-                        'message' => $e->getMessage(),
-                        'exception' => $e
-                    ]);
-                    $this->container['logger']->warning('You don\'t have access to Google Drive resource.');
-                    return [];
+                    $this->container['logger']->warning(
+                        sprintf(
+                            'You don\'t have access to Google Drive resource "%s"',
+                            $e->getRequest()->getUri()
+                        ),
+                        [
+                            'uri' => $e->getRequest()->getUri(),
+                            'statusCode' => $e->getResponse()->getStatusCode(),
+                            'message' => $e->getMessage(),
+                            'exception' => $e
+                        ]
+                    );
+
+                    return ['status' => 'warning'];
                 }
                 throw new UserException('Reason: ' . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e);
             }

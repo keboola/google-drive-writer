@@ -17,13 +17,18 @@ try {
     $config = json_decode(file_get_contents($arguments["data"] . "/config.json"), true);
     $config['parameters']['data_dir'] = $arguments['data'];
 
+    $isSyncAction = isset($config['action']) && $config['action'] != 'run';
     $app = new Application($config);
     $result = $app->run();
 
-    if (isset($config['action'])) {
+    if ($isSyncAction) {
         echo json_encode($result);
         exit(0);
     }
+
+    $status = isset($result['status']) ? $result['status'] : 'ok';
+    $logger->log('info', sprintf('Writer finished with status: %s', $result['status']));
+    exit(0);
 } catch (UserException $e) {
     if (isset($config['action']) && $config['action'] != 'run') {
         echo json_encode([
@@ -50,6 +55,3 @@ try {
     ]);
     exit(2);
 }
-
-$logger->log('info', "Writer finished successfully.");
-exit(0);
