@@ -27,7 +27,7 @@ try {
     }
 
     $status = isset($result['status']) ? $result['status'] : 'ok';
-    $logger->log('info', sprintf('Writer finished with status: %s', $result['status']));
+    echo sprintf('Writer finished with status: %s', $result['status']);
     exit(0);
 } catch (UserException $e) {
     if (isset($config['action']) && $config['action'] != 'run') {
