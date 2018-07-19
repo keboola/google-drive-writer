@@ -85,7 +85,7 @@ class Application
                     $this->container['logger']->warning(
                         sprintf(
                             'You don\'t have access to Google Drive resource "%s"',
-                            $e->getRequest()->getUri()
+                            $e->getRequest()->getUri()->__toString()
                         ),
                         [
                             'uri' => $e->getRequest()->getUri(),
