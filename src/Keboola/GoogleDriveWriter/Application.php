@@ -86,13 +86,7 @@ class Application
                         sprintf(
                             'You don\'t have access to Google Drive resource "%s"',
                             $e->getRequest()->getUri()->__toString()
-                        ),
-                        [
-                            'uri' => $e->getRequest()->getUri(),
-                            'statusCode' => $e->getResponse()->getStatusCode(),
-                            'message' => $e->getMessage(),
-                            'exception' => $e
-                        ]
+                        )
                     );
 
                     return ['status' => 'warning'];
