@@ -95,25 +95,41 @@ class Writer
 
     public function processTables($tables)
     {
-        return array_map(
-            $this->exceptionHandleWrapperFunc(function ($table) {
-                $action = $table['action'];
-                if ($action == ConfigDefinition::ACTION_CREATE) {
-                    return $this->create($table);
-                }
-                if ($action == ConfigDefinition::ACTION_UPDATE) {
-                    return $this->update($table);
-                }
+        $enabledTables = array_filter($tables, function ($table) {
+            return $table['enabled'];
+        });
 
-                throw new ApplicationException(sprintf(
-                    "Action '%s' doesn't exist. Use either 'create' or 'update'",
-                    $action
-                ));
-            }),
-            array_filter($tables, function ($table) {
-                return $table['enabled'];
-            })
-        );
+        $responses = [];
+        foreach ($enabledTables as $table) {
+            $responses[] = $this->processTable($table);
+        }
+
+        return $responses;
+    }
+
+    private function processTable($table)
+    {
+        try {
+            $action = $table['action'];
+            if ($action == ConfigDefinition::ACTION_CREATE) {
+                return $this->create($table);
+            }
+            if ($action == ConfigDefinition::ACTION_UPDATE) {
+                return $this->update($table);
+            }
+
+            throw new ApplicationException(sprintf(
+                "Action '%s' doesn't exist. Use either 'create' or 'update'",
+                $action
+            ));
+        } catch (RequestException $e) {
+            if ($e->getCode() == 403) {
+                $tableLogInfo = array_intersect_key($table, array_flip(['tableId', 'fileId', 'title']));
+                return $this->handleError403($e, $tableLogInfo);
+            }
+
+            throw $e;
+        }
     }
 
     private function create($file)
@@ -207,22 +223,7 @@ class Writer
         ]);
     }
 
-    private function exceptionHandleWrapperFunc($innerFunction)
-    {
-        return function ($params) use ($innerFunction) {
-            try {
-                return call_user_func($innerFunction, $params);
-            } catch (RequestException $e) {
-                if ($e->getCode() == 403) {
-                    return $this->handleError403($e);
-                }
-
-                throw $e;
-            }
-        };
-    }
-
-    public function handleError403(RequestException $e)
+    public function handleError403(RequestException $e, $data = null)
     {
         if (strtolower($e->getResponse()->getReasonPhrase()) == 'forbidden') {
             $this->logger->warning(
@@ -235,6 +236,6 @@ class Writer
             return ['status' => 'warning'];
         }
 
-        throw new UserException('Reason: ' . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e);
+        throw new UserException('Reason: ' . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e, $data);
     }
 }
