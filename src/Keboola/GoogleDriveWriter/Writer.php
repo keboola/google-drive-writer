@@ -1,13 +1,8 @@
 <?php
-/**
- * Extractor.php
- *
- * @author: Miroslav Čillík <miro@keboola.com>
- * @created: 29.7.13
- */
 
 namespace Keboola\GoogleDriveWriter;
 
+use GuzzleHttp\Exception\RequestException;
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
 use Keboola\GoogleDriveWriter\Exception\ApplicationException;
 use Keboola\GoogleDriveWriter\Exception\UserException;
@@ -100,21 +95,41 @@ class Writer
 
     public function processTables($tables)
     {
-        return array_map(function ($table) {
+        $enabledTables = array_filter($tables, function ($table) {
+            return $table['enabled'];
+        });
+
+        $responses = [];
+        foreach ($enabledTables as $table) {
+            $responses[] = $this->processTable($table);
+        }
+
+        return $responses;
+    }
+
+    private function processTable($table)
+    {
+        try {
             $action = $table['action'];
-            if (!in_array($action, [ConfigDefinition::ACTION_CREATE, ConfigDefinition::ACTION_UPDATE])) {
-                throw new ApplicationException(sprintf(
-                    "Action '%s' not allowed. Allowed values are 'create' or 'update'",
-                    $action
-                ));
-            }
             if ($action == ConfigDefinition::ACTION_CREATE) {
                 return $this->create($table);
             }
-            return $this->update($table);
-        }, array_filter($tables, function ($table) {
-            return $table['enabled'];
-        }));
+            if ($action == ConfigDefinition::ACTION_UPDATE) {
+                return $this->update($table);
+            }
+
+            throw new ApplicationException(sprintf(
+                "Action '%s' doesn't exist. Use either 'create' or 'update'",
+                $action
+            ));
+        } catch (RequestException $e) {
+            if ($e->getCode() == 403) {
+                $tableLogInfo = array_intersect_key($table, array_flip(['tableId', 'fileId', 'title']));
+                return $this->handleError403($e, $tableLogInfo);
+            }
+
+            throw $e;
+        }
     }
 
     private function create($file)
@@ -206,5 +221,21 @@ class Writer
         throw new ApplicationException("No input file or table specified", 0, null, [
             'file' => $file
         ]);
+    }
+
+    public function handleError403(RequestException $e, $data = null)
+    {
+        if (strtolower($e->getResponse()->getReasonPhrase()) == 'forbidden') {
+            $this->logger->warning(
+                sprintf(
+                    'You don\'t have access to Google Drive resource "%s"',
+                    $e->getRequest()->getUri()->__toString()
+                )
+            );
+
+            return ['status' => 'warning'];
+        }
+
+        throw new UserException('Reason: ' . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e, $data);
     }
 }

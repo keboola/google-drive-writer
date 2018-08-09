@@ -81,17 +81,7 @@ class Application
                 throw new UserException('Expired or wrong credentials, please reauthorize.', $e->getCode(), $e);
             }
             if ($e->getCode() == 403) {
-                if (strtolower($e->getResponse()->getReasonPhrase()) == 'forbidden') {
-                    $this->container['logger']->warning(
-                        sprintf(
-                            'You don\'t have access to Google Drive resource "%s"',
-                            $e->getRequest()->getUri()->__toString()
-                        )
-                    );
-
-                    return ['status' => 'warning'];
-                }
-                throw new UserException('Reason: ' . $e->getResponse()->getReasonPhrase(), $e->getCode(), $e);
+                $this->container['writer']->handleError403($e);
             }
             if ($e->getCode() == 400) {
                 throw new UserException($e->getMessage());
