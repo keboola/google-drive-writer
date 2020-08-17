@@ -442,6 +442,44 @@ class FunctionalTest extends BaseTest
         $this->assertGreaterThan($oldVersion, $gdFile['version']);
     }
 
+    public function testCreateDuplicateFile()
+    {
+        $this->prepareDataTables();
+
+        // Create file
+        $config1 = $this->prepareConfig();
+        $config1['parameters']['tables'][] = [
+            'id' => 0,
+            'title' => 'titanic',
+            'enabled' => true,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+            'action' => ConfigDefinition::ACTION_CREATE,
+            'tableId' => 'titanic',
+        ];
+        $process1 = $this->runProcess($config1);
+        $this->assertEquals(0, $process1->getExitCode(), $process1->getOutput());
+        $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
+        $this->assertCount(1, $gdFiles['files']);
+
+
+        // Create duplicate file -> UserException excepted
+        $fileId = $gdFiles['files'][0]['id'];
+        $config2 = $this->prepareConfig();
+        $config2['parameters']['tables'][] = [
+            'id' => 0,
+            'fileId' => $fileId,
+            'title' => 'titanic',
+            'enabled' => true,
+            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
+            'action' => ConfigDefinition::ACTION_CREATE,
+            'tableId' => 'titanic',
+        ];
+        $process2 = $this->runProcess($config2);
+        $this->assertEquals(1, $process2->getExitCode(), $process2->getOutput());
+        $this->assertContains('409 Conflict', $process2->getOutput());
+        $this->assertContains('fileIdInUse', $process2->getOutput());
+    }
+
     /**
      * @param $config
      * @return Process

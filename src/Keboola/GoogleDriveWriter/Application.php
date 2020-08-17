@@ -83,7 +83,7 @@ class Application
             if ($e->getCode() == 403) {
                 $this->container['writer']->handleError403($e);
             }
-            if ($e->getCode() == 400) {
+            if ($e->getCode() >= 400 && $e->getCode() < 500) {
                 throw new UserException($e->getMessage());
             }
             if ($e->getCode() >= 500 && $e->getCode() < 600) {
