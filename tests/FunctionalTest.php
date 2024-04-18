@@ -332,6 +332,7 @@ class FunctionalTest extends BaseTest
         foreach ($expectedFields as $field) {
             $this->assertArrayHasKey($field, $response['file']);
         }
+        $this->client->setTeamDriveSupport(true);
         $gdFile = $this->client->getFile($response['file']['id']);
         $this->assertArrayHasKey('id', $gdFile);
         $this->assertEquals('titanic', $gdFile['name']);
