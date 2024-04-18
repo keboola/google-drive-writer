@@ -7,24 +7,19 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="true"
-         syntaxCheck="false"
          bootstrap="bootstrap.php">
 
     <php>
         <const name="ROOT_PATH" value="."/>
     </php>
 
-    <testsuite name="Google Drive Extractor Test Suite">
+    <testsuite name="Google Drive Writer Test Suite">
         <directory>tests</directory>
     </testsuite>
 
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">./src/Keboola/GoogleDriveExtractor</directory>
+            <directory suffix=".php">./src/Keboola/GoogleDriveWriter</directory>
         </whitelist>
     </filter>
-
-    <logging>
-        <log type="coverage-clover" target="build/logs/clover.xml"/>
-    </logging>
 </phpunit>

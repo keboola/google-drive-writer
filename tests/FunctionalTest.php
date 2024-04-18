@@ -1,10 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 10/08/16
- * Time: 16:45
- */
+
+declare(strict_types=1);
+
 namespace Keboola\GoogleDriveWriter\Tests;
 
 use Keboola\GoogleDriveWriter\Configuration\ConfigDefinition;
@@ -15,9 +12,9 @@ use Symfony\Component\Process\Process;
 
 class FunctionalTest extends BaseTest
 {
-    private $tmpDataPath = '/tmp/data-test';
+    private string $tmpDataPath = '/tmp/data-test';
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $testFiles = $this->client->listFiles("name contains 'titanic' and trashed != true");
@@ -29,7 +26,7 @@ class FunctionalTest extends BaseTest
     /**
      * Create each time a new file - append date to filename
      */
-    public function testCreateFile()
+    public function testCreateFile(): void
     {
         $this->prepareDataTables();
 
@@ -52,7 +49,7 @@ class FunctionalTest extends BaseTest
         $this->assertCount(1, $gdFiles['files']);
     }
 
-    public function testCreateFileNoFolder()
+    public function testCreateFileNoFolder(): void
     {
         $this->prepareDataTables();
 
@@ -76,7 +73,7 @@ class FunctionalTest extends BaseTest
         $this->assertCount(1, $gdFiles['files']);
     }
 
-    public function testCreateFileConvert()
+    public function testCreateFileConvert(): void
     {
         $this->prepareDataTables();
 
@@ -88,7 +85,7 @@ class FunctionalTest extends BaseTest
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_CREATE,
             'tableId' => 'titanic',
-            'convert' => true
+            'convert' => true,
         ];
 
         $process = $this->runProcess($config);
@@ -105,7 +102,7 @@ class FunctionalTest extends BaseTest
     /**
      * Create or replace a file
      */
-    public function testUpdateFile()
+    public function testUpdateFile(): void
     {
         $this->prepareDataTables();
 
@@ -115,8 +112,8 @@ class FunctionalTest extends BaseTest
             'titanic_1',
             [
                 'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-                'mimeType' => 'text/csv'
-            ]
+                'mimeType' => 'text/csv',
+            ],
         );
 
         // update file
@@ -128,7 +125,7 @@ class FunctionalTest extends BaseTest
             'enabled' => true,
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE,
-            'tableId' => 'titanic_2'
+            'tableId' => 'titanic_2',
         ];
 
         $process = $this->runProcess($config);
@@ -141,7 +138,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('text/csv', $response['mimeType']);
     }
 
-    public function testUpdateTeamFile()
+    public function testUpdateTeamFile(): void
     {
         $this->prepareDataTables();
 
@@ -151,8 +148,8 @@ class FunctionalTest extends BaseTest
             'titanic_1',
             [
                 'parents' => [getenv('GOOGLE_DRIVE_TEAM_FOLDER')],
-                'mimeType' => 'text/csv'
-            ]
+                'mimeType' => 'text/csv',
+            ],
         );
 
         // update file
@@ -164,7 +161,7 @@ class FunctionalTest extends BaseTest
             'enabled' => true,
             'folder' => ['id' => getenv('GOOGLE_DRIVE_TEAM_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE,
-            'tableId' => 'titanic_2'
+            'tableId' => 'titanic_2',
         ];
 
         $process = $this->runProcess($config);
@@ -177,7 +174,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('text/csv', $response['mimeType']);
     }
 
-    public function testUpdateDisabledFile()
+    public function testUpdateDisabledFile(): void
     {
         $this->prepareDataTables();
 
@@ -187,8 +184,8 @@ class FunctionalTest extends BaseTest
             'titanic_1',
             [
                 'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-                'mimeType' => 'text/csv'
-            ]
+                'mimeType' => 'text/csv',
+            ],
         );
 
         $modified = $this->client->getFile($gdFile['id'], ['modifiedTime']);
@@ -202,7 +199,7 @@ class FunctionalTest extends BaseTest
             'enabled' => false,
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE,
-            'tableId' => 'titanic_2'
+            'tableId' => 'titanic_2',
         ];
 
         sleep(5);
@@ -218,7 +215,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals($modified['modifiedTime'], $response['modifiedTime']);
     }
 
-    public function testUpdateFileConvert()
+    public function testUpdateFileConvert(): void
     {
         $this->prepareDataTables();
 
@@ -228,8 +225,8 @@ class FunctionalTest extends BaseTest
             'titanic',
             [
                 'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-                'mimeType' => Client::MIME_TYPE_SPREADSHEET
-            ]
+                'mimeType' => Client::MIME_TYPE_SPREADSHEET,
+            ],
         );
 
         // update file
@@ -242,7 +239,7 @@ class FunctionalTest extends BaseTest
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE,
             'tableId' => 'titanic',
-            'convert' => true
+            'convert' => true,
         ];
 
         $process = $this->runProcess($config);
@@ -255,7 +252,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(Client::MIME_TYPE_SPREADSHEET, $response['mimeType']);
     }
 
-    public function testUpdateFileNoFolder()
+    public function testUpdateFileNoFolder(): void
     {
         $this->prepareDataTables();
 
@@ -265,8 +262,8 @@ class FunctionalTest extends BaseTest
             'titanic_3',
             [
                 'parents' => [getenv('GOOGLE_DRIVE_FOLDER')],
-                'mimeType' => 'text/csv'
-            ]
+                'mimeType' => 'text/csv',
+            ],
         );
 
         // update file
@@ -277,7 +274,7 @@ class FunctionalTest extends BaseTest
             'title' => 'titanic_4',
             'enabled' => true,
             'action' => ConfigDefinition::ACTION_UPDATE,
-            'tableId' => 'titanic_2'
+            'tableId' => 'titanic_2',
         ];
 
         $process = $this->runProcess($config);
@@ -293,7 +290,7 @@ class FunctionalTest extends BaseTest
     /**
      * Create New File using sync action
      */
-    public function testSyncActionCreateFile()
+    public function testSyncActionCreateFile(): void
     {
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
@@ -302,7 +299,7 @@ class FunctionalTest extends BaseTest
             'title' => 'titanic',
             'enabled' => true,
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
-            'action' => ConfigDefinition::ACTION_UPDATE
+            'action' => ConfigDefinition::ACTION_UPDATE,
         ];
 
         $process = $this->runProcess($config);
@@ -314,7 +311,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('text/csv', $gdFile['mimeType']);
     }
 
-    public function testSyncActionCreateFileNoFolder()
+    public function testSyncActionCreateFileNoFolder(): void
     {
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
@@ -322,7 +319,7 @@ class FunctionalTest extends BaseTest
             'id' => 0,
             'title' => 'titanic',
             'enabled' => true,
-            'action' => ConfigDefinition::ACTION_UPDATE
+            'action' => ConfigDefinition::ACTION_UPDATE,
         ];
 
         $process = $this->runProcess($config);
@@ -341,7 +338,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals('text/csv', $gdFile['mimeType']);
     }
 
-    public function testSyncActionCreateFileConvert()
+    public function testSyncActionCreateFileConvert(): void
     {
         $config = $this->prepareConfig();
         $config['action'] = 'createFile';
@@ -351,7 +348,7 @@ class FunctionalTest extends BaseTest
             'enabled' => true,
             'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
             'action' => ConfigDefinition::ACTION_UPDATE,
-            'convert' => true
+            'convert' => true,
         ];
 
         $process = $this->runProcess($config);
@@ -363,7 +360,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(Client::MIME_TYPE_SPREADSHEET, $gdFile['mimeType']);
     }
 
-    public function testSyncActionGetFolder()
+    public function testSyncActionGetFolder(): void
     {
         $config = $this->prepareConfig();
         $config['action'] = 'getFolder';
@@ -380,12 +377,12 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(getenv('GOOGLE_DRIVE_FOLDER'), $response['file']['id']);
     }
 
-    public function testSyncActionGetFolderDefault()
+    public function testSyncActionGetFolderDefault(): void
     {
         $config = $this->prepareConfig();
         $config['action'] = 'getFolder';
         $config['parameters']['tables'][] = [
-            'id' => 0
+            'id' => 0,
         ];
 
         $process = $this->runProcess($config);
@@ -399,7 +396,7 @@ class FunctionalTest extends BaseTest
     /**
      * Test processing files from FileUpload
      */
-    public function testFileUpload()
+    public function testFileUpload(): void
     {
         $this->prepareDataFiles();
 
@@ -442,7 +439,7 @@ class FunctionalTest extends BaseTest
         $this->assertGreaterThan($oldVersion, $gdFile['version']);
     }
 
-    public function testCreateDuplicateFile()
+    public function testCreateDuplicateFile(): void
     {
         $this->prepareDataTables();
 
@@ -460,7 +457,6 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(0, $process1->getExitCode(), $process1->getOutput());
         $gdFiles = $this->client->listFiles("name contains 'titanic (" . date('Y-m-d') . "' and trashed != true");
         $this->assertCount(1, $gdFiles['files']);
-
 
         // Create duplicate file -> UserException excepted
         $fileId = $gdFiles['files'][0]['id'];
@@ -480,11 +476,7 @@ class FunctionalTest extends BaseTest
         $this->assertContains('fileIdInUse', $process2->getOutput());
     }
 
-    /**
-     * @param $config
-     * @return Process
-     */
-    private function runProcess($config)
+    private function runProcess(array $config): Process
     {
         file_put_contents($this->tmpDataPath . '/config.json', json_encode($config));
 
@@ -495,7 +487,7 @@ class FunctionalTest extends BaseTest
         return $process;
     }
 
-    private function prepareDataTables()
+    private function prepareDataTables(): void
     {
         $fs = new Filesystem();
         $fs->remove($this->tmpDataPath);
@@ -506,11 +498,11 @@ class FunctionalTest extends BaseTest
         $fs->copy($this->dataPath . '/in/tables/titanic_2.csv', $this->tmpDataPath . '/in/tables/titanic_2.csv');
         $fs->copy(
             $this->dataPath . '/in/tables/titanic_2_headerless.csv',
-            $this->tmpDataPath . '/in/tables/titanic_2_headerless.csv'
+            $this->tmpDataPath . '/in/tables/titanic_2_headerless.csv',
         );
     }
 
-    private function prepareDataFiles()
+    private function prepareDataFiles(): void
     {
         $fs = new Filesystem();
         $fs->remove($this->tmpDataPath);
@@ -518,11 +510,11 @@ class FunctionalTest extends BaseTest
         $fs->mkdir($this->tmpDataPath . '/in/files/');
         $fs->copy(
             $this->dataPath . '/in/files/wr-google-drive-64.png',
-            $this->tmpDataPath . '/in/files/wr-google-drive-64.png'
+            $this->tmpDataPath . '/in/files/wr-google-drive-64.png',
         );
         $fs->copy(
             $this->dataPath . '/in/files/wr-google-drive-64.png.manifest',
-            $this->tmpDataPath . '/in/files/wr-google-drive-64.png.manifest'
+            $this->tmpDataPath . '/in/files/wr-google-drive-64.png.manifest',
         );
     }
 }

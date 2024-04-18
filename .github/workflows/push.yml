@@ -9,7 +9,7 @@ env:
     KBC_DEVELOPERPORTAL_USERNAME: keboola+wr_google_drive_gha
     KBC_DEVELOPERPORTAL_PASSWORD: '${{ secrets.KBC_DEVELOPERPORTAL_PASSWORD }}'
 
-    CLIENT_ID: 1025566943657-9v7r93sghf170oeeu63k0n4hvsru97lm.apps.googleusercontent.com
+    CLIENT_ID: 383797098604-tctsequl2v6r5d6vh9m4lhrf8hae59ai.apps.googleusercontent.com
     CLIENT_SECRET: '${{ secrets.CLIENT_SECRET }}'
     ACCESS_TOKEN: '${{ secrets.ACCESS_TOKEN }}'
     REFRESH_TOKEN: '${{ secrets.REFRESH_TOKEN }}'

@@ -1,10 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 10/08/16
- * Time: 15:50
- */
+
+declare(strict_types=1);
 
 namespace Keboola\GoogleDriveWriter\Configuration;
 
@@ -13,15 +9,15 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class ConfigDefinition implements ConfigurationInterface
 {
-    const ACTION_CREATE = 'create';
-    const ACTION_UPDATE = 'update';
+    public const ACTION_CREATE = 'create';
+    public const ACTION_UPDATE = 'update';
 
     /**
      * Generates the configuration tree builder.
      *
-     * @return \Symfony\Component\Config\Definition\Builder\TreeBuilder The tree builder
+     * @return TreeBuilder The tree builder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('parameters');

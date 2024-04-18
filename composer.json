@@ -20,7 +20,8 @@
     "guzzlehttp/guzzle": "^6.2",
     "keboola/php-temp": "^0.1.6",
     "keboola/google-sheets-client": "^1.4",
-    "symfony/finder": "^3.2"
+    "symfony/finder": "^3.2",
+    "ext-json": "*"
   },
   "require-dev": {
     "phpstan/phpstan": "^1.4",
