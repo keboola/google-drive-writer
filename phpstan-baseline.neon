@@ -137,17 +137,12 @@ parameters:
 
 		-
 			message: "#^Cannot access offset 'file' on mixed\\.$#"
-			count: 9
-			path: tests/FunctionalTest.php
-
-		-
-			message: "#^Cannot access offset 'id' on mixed\\.$#"
 			count: 5
 			path: tests/FunctionalTest.php
 
 		-
-			message: "#^Cannot access offset 'mimeType' on mixed\\.$#"
-			count: 2
+			message: "#^Cannot access offset 'id' on mixed\\.$#"
+			count: 3
 			path: tests/FunctionalTest.php
 
 		-

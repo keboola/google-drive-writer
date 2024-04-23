@@ -90,6 +90,13 @@ jobs:
                     -e GOOGLE_DRIVE_FOLDER \
                     -e GOOGLE_DRIVE_TEAM_FOLDER \
                     ${{env.APP_IMAGE}} composer ci
+                env:
+                    CLIENT_ID: '${{ env.CLIENT_ID }}'
+                    CLIENT_SECRET: '${{ env.CLIENT_SECRET }}'
+                    ACCESS_TOKEN: '${{ env.ACCESS_TOKEN }}'
+                    REFRESH_TOKEN: '${{ env.REFRESH_TOKEN }}'
+                    GOOGLE_DRIVE_FOLDER: '${{ env.GOOGLE_DRIVE_FOLDER }}'
+                    GOOGLE_DRIVE_TEAM_FOLDER: '${{ env.GOOGLE_DRIVE_TEAM_FOLDER }}'
     tests-in-kbc:
         needs: build
         runs-on: ubuntu-latest
