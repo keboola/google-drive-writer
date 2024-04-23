@@ -190,10 +190,9 @@ class Writer
         $fileRes = $this->client->createFileMetadata($file['title'], $params);
 
         if (empty($folder)) {
-            $folderRes = $this->getFile($fileRes['parents'][0]);
             $folder = [
-                'id' => $folderRes['id'],
-                'title' => $folderRes['name'],
+                'id' => 'root',
+                'title' => '',
             ];
         }
         $fileRes['folder'] = $folder;
@@ -207,6 +206,7 @@ class Writer
         if (empty($fields)) {
             $fields = $defaultFields;
         }
+
         return $this->client->getFile($fileId, $fields);
     }
 

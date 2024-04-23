@@ -127,11 +127,14 @@ class Application
         $writer = $this->container['writer'];
         $writer->setNumberOfRetries(2);
 
-        $folderId = 'root';
+        $response = [
+            'id' => 'root',
+            'title' => '',
+        ];
         if (!empty($this->container['parameters']['tables'][0]['folder']['id'])) {
             $folderId = $this->container['parameters']['tables'][0]['folder']['id'];
+            $response = $writer->getFile($folderId);
         }
-        $response = $writer->getFile($folderId);
 
         return [
             'status' => 'ok',
