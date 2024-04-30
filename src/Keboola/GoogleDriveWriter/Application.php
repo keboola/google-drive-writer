@@ -1,11 +1,6 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 10/08/16
- * Time: 15:45
- */
+declare(strict_types=1);
 
 namespace Keboola\GoogleDriveWriter;
 
@@ -22,12 +17,12 @@ use Symfony\Component\Config\Definition\Processor;
 
 class Application
 {
-    private $container;
+    private Container $container;
 
-    public function __construct($config)
+    public function __construct(array $config)
     {
         $container = new Container();
-        $container['action'] = isset($config['action'])?$config['action']:'run';
+        $container['action'] = $config['action'] ?? 'run';
         $container['logger'] = function ($c) {
             $logger = new Logger(APP_NAME);
             if ($c['action'] !== 'run') {
@@ -45,7 +40,7 @@ class Application
                 $config['authorization']['oauth_api']['credentials']['appKey'],
                 $config['authorization']['oauth_api']['credentials']['#appSecret'],
                 $tokenData['access_token'],
-                $tokenData['refresh_token']
+                $tokenData['refresh_token'],
             );
         };
         $container['google_drive_client'] = function ($c) {
@@ -60,14 +55,14 @@ class Application
             return new Writer(
                 $c['google_drive_client'],
                 $c['input'],
-                $c['logger']
+                $c['logger'],
             );
         };
 
         $this->container = $container;
     }
 
-    public function run()
+    public function run(): array
     {
         $actionMethod = $this->container['action'] . 'Action';
         if (!method_exists($this, $actionMethod)) {
@@ -77,10 +72,10 @@ class Application
         try {
             return $this->$actionMethod();
         } catch (RequestException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() === 401) {
                 throw new UserException('Expired or wrong credentials, please reauthorize.', $e->getCode(), $e);
             }
-            if ($e->getCode() == 403) {
+            if ($e->getCode() === 403) {
                 $this->container['writer']->handleError403($e);
             }
             if ($e->getCode() >= 400 && $e->getCode() < 500) {
@@ -90,12 +85,12 @@ class Application
                 throw new UserException('Google API error: ' . $e->getMessage(), $e->getCode(), $e);
             }
             throw new ApplicationException($e->getMessage(), 500, $e, [
-                'response' => $e->getResponse()->getBody()->getContents()
+                'response' => $e->getResponse()->getBody()->getContents(),
             ]);
         }
     }
 
-    protected function runAction()
+    protected function runAction(): array
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
@@ -109,11 +104,11 @@ class Application
         }
 
         return [
-            'status' => 'ok'
+            'status' => 'ok',
         ];
     }
 
-    protected function createFileAction()
+    protected function createFileAction(): array
     {
         /** @var Writer $writer */
         $writer = $this->container['writer'];
@@ -122,35 +117,17 @@ class Application
 
         return [
             'status' => 'ok',
-            'file' => $response
+            'file' => $response,
         ];
     }
 
-    protected function getFolderAction()
-    {
-        /** @var Writer $writer */
-        $writer = $this->container['writer'];
-        $writer->setNumberOfRetries(2);
-
-        $folderId = 'root';
-        if (!empty($this->container['parameters']['tables'][0]['folder']['id'])) {
-            $folderId = $this->container['parameters']['tables'][0]['folder']['id'];
-        }
-        $response = $writer->getFile($folderId);
-
-        return [
-            'status' => 'ok',
-            'file' => $response
-        ];
-    }
-
-    private function validateParameters($parameters)
+    private function validateParameters(array $parameters): array
     {
         try {
             $processor = new Processor();
             return $processor->processConfiguration(
                 new ConfigDefinition(),
-                [$parameters]
+                [$parameters],
             );
         } catch (InvalidConfigurationException $e) {
             throw new UserException($e->getMessage(), 400, $e);

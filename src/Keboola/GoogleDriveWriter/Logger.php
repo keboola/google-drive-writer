@@ -1,43 +1,39 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 10/12/15
- * Time: 12:45
- */
+declare(strict_types=1);
 
 namespace Keboola\GoogleDriveWriter;
 
 use Keboola\GoogleDriveWriter\Logger\LineFormatter;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger as MonologLogger;
 
-class Logger extends \Monolog\Logger
+class Logger extends MonologLogger
 {
-    private $debug = false;
+    private bool $debug = false;
 
-    public function __construct($name = '')
+    public function __construct(string $name = '')
     {
-        $options = getopt("", ['debug']);
+        $options = getopt('', ['debug']);
         if (isset($options['debug'])) {
             $this->debug = true;
         }
 
         $formatter = $this->getFormatter();
-        $errHandler = new StreamHandler('php://stderr', \Monolog\Logger::NOTICE, false);
-        $level = $this->debug ? \Monolog\Logger::DEBUG : \Monolog\Logger::INFO;
+        $errHandler = new StreamHandler('php://stderr', MonologLogger::NOTICE, false);
+        $level = $this->debug ? MonologLogger::DEBUG : MonologLogger::INFO;
         $handler = new StreamHandler('php://stdout', $level);
         $handler->setFormatter($formatter);
 
         parent::__construct($name, [$errHandler, $handler]);
     }
 
-    public function setDebug($bool)
+    public function setDebug(bool $bool): void
     {
         $this->debug = $bool;
     }
 
-    private function getFormatter()
+    private function getFormatter(): LineFormatter
     {
         if ($this->debug) {
             return new LineFormatter();
