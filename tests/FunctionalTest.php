@@ -364,39 +364,6 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(Client::MIME_TYPE_SPREADSHEET, $gdFile['mimeType']);
     }
 
-//    public function testSyncActionGetFolder(): void
-//    {
-//        $config = $this->prepareConfig();
-//        $config['action'] = 'getFolder';
-//        $config['parameters']['tables'][] = [
-//            'id' => 0,
-//            'folder' => ['id' => getenv('GOOGLE_DRIVE_FOLDER')],
-//        ];
-//
-//        $process = $this->runProcess($config);
-//        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
-//        $response = json_decode($process->getOutput(), true);
-//
-//        $this->assertEquals('application/vnd.google-apps.folder', $response['file']['mimeType']);
-//        $this->assertEquals(getenv('GOOGLE_DRIVE_FOLDER'), $response['file']['id']);
-//    }
-//
-//    public function testSyncActionGetFolderDefault(): void
-//    {
-//        $config = $this->prepareConfig();
-//        $config['action'] = 'getFolder';
-//        $config['parameters']['tables'][] = [
-//            'id' => 0,
-//        ];
-//
-//        $process = $this->runProcess($config);
-//        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
-//        $response = json_decode($process->getOutput(), true);
-//
-//        $this->assertEquals('application/vnd.google-apps.folder', $response['file']['mimeType']);
-//        $this->assertNotEquals(getenv('GOOGLE_DRIVE_FOLDER'), $response['file']['id']);
-//    }
-
     /**
      * Test processing files from FileUpload
      */

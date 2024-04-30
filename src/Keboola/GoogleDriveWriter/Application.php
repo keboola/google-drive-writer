@@ -121,27 +121,6 @@ class Application
         ];
     }
 
-    protected function getFolderAction(): array
-    {
-        /** @var Writer $writer */
-        $writer = $this->container['writer'];
-        $writer->setNumberOfRetries(2);
-
-        $response = [
-            'id' => 'root',
-            'title' => '',
-        ];
-        if (!empty($this->container['parameters']['tables'][0]['folder']['id'])) {
-            $folderId = $this->container['parameters']['tables'][0]['folder']['id'];
-            $response = $writer->getFile($folderId);
-        }
-
-        return [
-            'status' => 'ok',
-            'file' => $response,
-        ];
-    }
-
     private function validateParameters(array $parameters): array
     {
         try {
