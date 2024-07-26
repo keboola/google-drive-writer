@@ -1,57 +1,73 @@
 {
-  "name": "keboola/google-drive-writer",
-  "license": "MIT",
-  "type": "project",
-  "description": "Keboola Google Drive Writer",
-  "keywords": ["keboola", "google", "drive", "spreadsheets", "writer"],
-  "authors": [
-    {
-      "name": "Miroslav Čillík",
-      "email": "miro@keboola.com"
-    }
-  ],
-  "require": {
-    "php": "^7.4",
-    "keboola/csv": "^1.1",
-    "pimple/pimple": "^3.0",
-    "monolog/monolog": "^1.17",
-    "symfony/config": "^4.0",
-    "symfony/process": "^4.0",
-    "guzzlehttp/guzzle": "^6.2",
-    "keboola/php-temp": "^0.1.6",
-    "keboola/google-sheets-client": "^1.4",
-    "symfony/finder": "^3.2",
-    "ext-json": "*"
-  },
-  "require-dev": {
-    "phpstan/phpstan": "^1.4",
-    "phpunit/phpunit": "^5.3",
-    "keboola/coding-standard": ">=7.0.2",
-    "squizlabs/php_codesniffer": "^3.2"
-  },
-  "autoload": {
-    "psr-4": {
-      "Keboola\\": "src/Keboola/"
-    }
-  },
-  "scripts": {
-    "tests": "phpunit",
-    "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
-    "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
-    "phpstan": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon",
-    "build": [
-      "@phpstan",
-      "@phpcs",
-      "@tests"
+    "name": "keboola/google-drive-writer",
+    "license": "MIT",
+    "type": "project",
+    "description": "Keboola Google Drive Writer",
+    "keywords": [
+        "keboola",
+        "google",
+        "drive",
+        "spreadsheets",
+        "writer"
     ],
-    "ci": [
-      "@composer validate --no-check-publish --no-check-all",
-      "@build"
-    ]
-  },
-  "config": {
-    "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
+    "authors": [
+        {
+            "name": "Miroslav Čillík",
+            "email": "miro@keboola.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "keboola/csv": "^1.1",
+        "pimple/pimple": "^3.0",
+        "monolog/monolog": "^1.17",
+        "symfony/config": "^4.0",
+        "symfony/process": "^4.0",
+        "guzzlehttp/guzzle": "^6.2",
+        "keboola/php-temp": "^0.1.6",
+        "keboola/google-sheets-client": "^1.4",
+        "symfony/finder": "^3.2",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.4",
+        "phpunit/phpunit": "^5.3",
+        "keboola/coding-standard": ">=7.0.2",
+        "squizlabs/php_codesniffer": "^3.2",
+        "cweagans/composer-patches": "^1.7",
+        "symplify/vendor-patches": "^11.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Keboola\\": "src/Keboola/"
+        }
+    },
+    "scripts": {
+        "tests": "phpunit",
+        "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
+        "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
+        "phpstan": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon",
+        "build": [
+            "@phpstan",
+            "@phpcs",
+            "@tests"
+        ],
+        "ci": [
+            "@composer validate --no-check-publish --no-check-all",
+            "@build"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "cweagans/composer-patches": true
+        }
+    },
+    "extra": {
+        "patches": {
+            "guzzlehttp/guzzle": [
+                "patches/guzzlehttp-guzzle-src-exception-requestexception-php.patch"
+            ]
+        }
     }
-  }
 }
