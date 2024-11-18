@@ -19,7 +19,7 @@
     "symfony/process": "^4.0",
     "guzzlehttp/guzzle": "^6.2",
     "keboola/php-temp": "^0.1.6",
-    "keboola/google-sheets-client": "^1.4",
+    "keboola/google-sheets-client": "^1.5",
     "symfony/finder": "^3.2",
     "ext-json": "*"
   },
