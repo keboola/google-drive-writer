@@ -9,6 +9,7 @@ use Keboola\GoogleDriveWriter\Test\BaseTest;
 use Keboola\GoogleSheetsClient\Client;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 class FunctionalTest extends BaseTest
 {
@@ -19,7 +20,11 @@ class FunctionalTest extends BaseTest
         parent::setUp();
         $testFiles = $this->client->listFiles("name contains 'titanic' and trashed != true");
         foreach ($testFiles['files'] as $file) {
-            $this->client->deleteFile($file['id']);
+            try {
+                $this->client->deleteFile($file['id']);
+            } catch (Throwable $e) {
+                // ignore
+            }
         }
     }
 
