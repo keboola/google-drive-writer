@@ -35,7 +35,7 @@
     }
   },
   "scripts": {
-    "tests": "phpunit --stop-on-failure",
+    "tests": "phpunit",
     "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
     "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
     "phpstan": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon",

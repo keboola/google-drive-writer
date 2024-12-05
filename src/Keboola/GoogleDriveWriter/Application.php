@@ -139,15 +139,17 @@ class Application
 
         if ($tables !== []) {
             $tableCount = count($tables);
-            $warningsCount = 0;
 
             /** @var Writer $writer */
             $writer = $this->container['writer'];
 
             $response = $writer->processTables($tables);
-            if ($response === ['status' => 'warning']) {
-                $warningsCount++;
-            }
+            $warningsCount = count(
+                array_filter(
+                    $response,
+                    fn ($item) => isset($item['status']) && $item['status'] === 'warning',
+                ),
+            );
 
             if ($warningsCount >= $tableCount) {
                 return false;
