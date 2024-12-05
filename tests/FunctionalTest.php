@@ -456,7 +456,7 @@ class FunctionalTest extends BaseTest
     {
         file_put_contents($this->tmpDataPath . '/config.json', json_encode($config));
 
-        $process = new Process(sprintf('php run.php --data=%s 2>&1', $this->tmpDataPath));
+        $process = new Process(['php', 'run.php', '--data=' . $this->tmpDataPath, '2>&1']);
         $process->setTimeout(180);
         $process->run();
 
