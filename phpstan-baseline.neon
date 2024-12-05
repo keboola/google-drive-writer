@@ -51,11 +51,6 @@ parameters:
 			path: src/Keboola/GoogleDriveWriter/Application.php
 
 		-
-			message: "#^Parameter \\#1 \\$tables of method Keboola\\\\GoogleDriveWriter\\\\Writer\\:\\:processTables\\(\\) expects array, mixed given\\.$#"
-			count: 1
-			path: src/Keboola/GoogleDriveWriter/Application.php
-
-		-
 			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/Keboola/GoogleDriveWriter/Application.php

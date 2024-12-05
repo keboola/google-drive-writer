@@ -134,14 +134,17 @@ class Application
 
     private function processTables(): bool
     {
-        if (!empty($this->container['parameters']['tables'])) {
-            $tableCount = count($this->container['parameters']['tables']);
+        /** @var array<int, mixed> $tables */
+        $tables = $this->container['parameters']['tables'];
+
+        if ($tables !== []) {
+            $tableCount = count($tables);
             $warningsCount = 0;
 
             /** @var Writer $writer */
             $writer = $this->container['writer'];
 
-            $response = $writer->processTables($this->container['parameters']['tables']);
+            $response = $writer->processTables($tables);
             if ($response === ['status' => 'warning']) {
                 $warningsCount++;
             }

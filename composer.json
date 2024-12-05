@@ -39,6 +39,7 @@
     "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
     "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
     "phpstan": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon",
+    "phpstan-baseline": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon --generate-baseline",
     "build": [
       "@phpstan",
       "@phpcs",
