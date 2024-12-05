@@ -136,11 +136,6 @@ parameters:
 			path: tests/FunctionalTest.php
 
 		-
-			message: "#^Parameter \\#1 \\$command of class Symfony\\\\Component\\\\Process\\\\Process constructor expects array, string given\\.$#"
-			count: 1
-			path: tests/FunctionalTest.php
-
-		-
 			message: "#^Parameter \\#1 \\$fileId of method Keboola\\\\GoogleSheetsClient\\\\Client\\:\\:getFile\\(\\) expects string, mixed given\\.$#"
 			count: 3
 			path: tests/FunctionalTest.php

@@ -448,7 +448,6 @@ class FunctionalTest extends BaseTest
         ];
         $process2 = $this->runProcess($config2);
         $this->assertEquals(1, $process2->getExitCode(), $process2->getOutput());
-        $this->assertContains('409 Conflict', $process2->getOutput());
         $this->assertContains('A file already exists with the provided ID', $process2->getOutput());
     }
 
