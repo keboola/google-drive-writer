@@ -137,7 +137,7 @@ class Application
         /** @var array<int, mixed> $tables */
         $tables = $this->container['parameters']['tables'];
 
-        if ($tables !== []) {
+        if (!empty($tables)) {
             $tableCount = count($tables);
 
             /** @var Writer $writer */
