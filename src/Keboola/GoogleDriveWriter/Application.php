@@ -135,9 +135,9 @@ class Application
     private function processTables(): bool
     {
         /** @var array<int, mixed> $tables */
-        $tables = $this->container['parameters']['tables'];
+        $tables = $this->container['parameters']['tables'] ?? [];
 
-        if (!empty($tables)) {
+        if ($tables !== []) {
             $tableCount = count($tables);
 
             /** @var Writer $writer */
