@@ -448,15 +448,15 @@ class FunctionalTest extends BaseTest
         ];
         $process2 = $this->runProcess($config2);
         $this->assertEquals(1, $process2->getExitCode(), $process2->getOutput());
-        $this->assertContains('409 Conflict', $process2->getOutput());
-        $this->assertContains('A file already exists with the provided ID', $process2->getOutput());
+        $this->assertContains('409 Conflict', $process2->getErrorOutput());
+        $this->assertContains('A file already exists with the provided ID', $process2->getErrorOutput());
     }
 
     private function runProcess(array $config): Process
     {
         file_put_contents($this->tmpDataPath . '/config.json', json_encode($config));
 
-        $process = new Process(sprintf('php run.php --data=%s 2>&1', $this->tmpDataPath));
+        $process = new Process(['php', 'run.php', '--data=' . $this->tmpDataPath, '2>&1']);
         $process->setTimeout(180);
         $process->run();
 

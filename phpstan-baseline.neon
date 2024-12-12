@@ -51,11 +51,6 @@ parameters:
 			path: src/Keboola/GoogleDriveWriter/Application.php
 
 		-
-			message: "#^Parameter \\#1 \\$tables of method Keboola\\\\GoogleDriveWriter\\\\Writer\\:\\:processTables\\(\\) expects array, mixed given\\.$#"
-			count: 1
-			path: src/Keboola/GoogleDriveWriter/Application.php
-
-		-
 			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/Keboola/GoogleDriveWriter/Application.php
@@ -137,11 +132,6 @@ parameters:
 
 		-
 			message: "#^Cannot access offset 0 on mixed\\.$#"
-			count: 1
-			path: tests/FunctionalTest.php
-
-		-
-			message: "#^Parameter \\#1 \\$command of class Symfony\\\\Component\\\\Process\\\\Process constructor expects array, string given\\.$#"
 			count: 1
 			path: tests/FunctionalTest.php
 

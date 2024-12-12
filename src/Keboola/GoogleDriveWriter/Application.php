@@ -95,16 +95,14 @@ class Application
         /** @var Writer $writer */
         $writer = $this->container['writer'];
 
-        if (!empty($this->container['parameters']['tables'])) {
-            $writer->processTables($this->container['parameters']['tables']);
-        }
+        $status = $this->processTables() ? 'ok' : 'error';
 
         if (!empty($this->container['parameters']['files'])) {
             $writer->processFiles($this->container['parameters']['files']);
         }
 
         return [
-            'status' => 'ok',
+            'status' => $status,
         ];
     }
 
@@ -132,5 +130,32 @@ class Application
         } catch (InvalidConfigurationException $e) {
             throw new UserException($e->getMessage(), 400, $e);
         }
+    }
+
+    private function processTables(): bool
+    {
+        /** @var array<int, mixed> $tables */
+        $tables = $this->container['parameters']['tables'] ?? [];
+
+        if ($tables !== []) {
+            $tableCount = count($tables);
+
+            /** @var Writer $writer */
+            $writer = $this->container['writer'];
+
+            $response = $writer->processTables($tables);
+            $warningsCount = count(
+                array_filter(
+                    $response,
+                    fn ($item) => isset($item['status']) && $item['status'] === 'warning',
+                ),
+            );
+
+            if ($warningsCount >= $tableCount) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -16,7 +16,7 @@
     "pimple/pimple": "^3.0",
     "monolog/monolog": "^1.17",
     "symfony/config": "^4.0",
-    "symfony/process": "^4.0",
+    "symfony/process": "^5.4",
     "guzzlehttp/guzzle": "^6.2",
     "keboola/php-temp": "^0.1.6",
     "keboola/google-sheets-client": "^1.5",
@@ -39,6 +39,7 @@
     "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
     "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
     "phpstan": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon",
+    "phpstan-baseline": "phpstan analyse --no-progress --level=max src tests -c phpstan.neon --generate-baseline",
     "build": [
       "@phpstan",
       "@phpcs",
