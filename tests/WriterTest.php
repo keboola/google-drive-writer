@@ -117,7 +117,12 @@ class WriterTest extends PHPUnit_Framework_TestCase
         // PHPUnit 5.7 generates mocks via ReflectionType::__toString(), which is deprecated on
         // PHP 7.4. bootstrap.php turns every PHP error into an ErrorException, so the deprecation
         // has to be silenced while the mock classes are being generated.
-        set_error_handler(fn (): bool => true, E_DEPRECATED);
+        set_error_handler(
+            function (int $errno, string $errstr, string $errfile = '', int $errline = 0): bool {
+                return true;
+            },
+            E_DEPRECATED,
+        );
         try {
             $api = $this->createMock(RestApi::class);
             $client = $this->createMock(Client::class);
