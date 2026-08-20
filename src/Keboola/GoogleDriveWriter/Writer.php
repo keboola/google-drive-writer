@@ -140,6 +140,15 @@ class Writer
 
     private function update(array $file): array
     {
+        if (!array_key_exists('fileId', $file)) {
+            throw new UserException(sprintf(
+                'Missing "fileId" in the configuration of table "%s", which has the action "update". '
+                . 'Select an existing Google Drive file for this table, or change its action to "create", '
+                . 'then save the configuration and run the writer again.',
+                $this->getTableLabel($file),
+            ));
+        }
+
         if ($this->client->fileExists($file['fileId'])) {
             $params = [
                 'name' => $file['title'],
@@ -156,6 +165,20 @@ class Writer
         }
 
         return $this->createFile($file);
+    }
+
+    /**
+     * Best effort, human readable identification of a table config, used only in error messages.
+     */
+    private function getTableLabel(array $file): string
+    {
+        foreach (['tableId', 'title'] as $key) {
+            if (isset($file[$key]) && is_scalar($file[$key])) {
+                return (string) $file[$key];
+            }
+        }
+
+        return 'unknown';
     }
 
     private function createFile(array $file): array
